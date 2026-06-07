@@ -1,26 +1,150 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "@fontsource/roboto/400.css";
+@import "@fontsource/roboto/500.css";
+@import "@fontsource/roboto/600.css";
+@import "@fontsource/roboto/700.css";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-background: #ffffff;
+  --color-foreground: #17171a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Brand — turquoise / teal family. Single source of truth for the palette. */
+  --color-primary: #0d9488;        /* teal-600 — buttons, primary actions, header bar accents */
+  --color-primary-hover: #0f766e;  /* teal-700 — hover / pressed */
+  --color-primary-dark: #0f766e;   /* teal-700 — brand text on white (e.g. prices) */
+  --color-accent: #0891b2;         /* cyan-600 — links, secondary buttons, info states, focus rings */
+  --color-surface-tint: #f0fdfa;   /* teal-50 — hover backgrounds, selected rows, subtle fills */
+
+  /* Semantic positive — verified. Distinct from primary on purpose (validation, not a CTA). */
+  --color-verified: #10b981;       /* emerald-500 */
+  --color-verified-bg: #ecfdf5;    /* emerald-50 */
+
+  /* Neutrals — unchanged. */
+  --color-text: #17171a;
+  --color-text-muted: #71717a;
+  --color-border: #e4e4e7;
+  --color-surface: #f8f8f8;
+
+  /* Urgency accent (not brand / not purple) — unchanged. */
+  --color-orange: #fd6005;
+
+  --font-sans: "Roboto", Arial, Helvetica, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Slide-in animation for the mortgage panel */
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.25s ease-out;
+}
+
+/* Fade + slide-up reveal — used when the project grid surfaces after region selection */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-reveal {
+  animation: reveal-up 0.4s ease-out;
+}
+
+/* Bottom-sheet entrance (mobile filter sheet) */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Range input styling — green filled (24px) + grey empty (12px), no border */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Track — two-tone via gradient; grey part is shorter so we fake it with a shadow/overlay approach */
+/* WebKit: we use the full 24px track and layer the colors */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 24px;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      to right,
+      #0d9488 0%,
+      #0d9488 var(--range-progress, 0%),
+      transparent var(--range-progress, 0%),
+      transparent 100%
+    ),
+    /* Grey track centered, 12px tall via inset gradient */
+    linear-gradient(
+      to bottom,
+      transparent 6px,
+      #e4e4e7 6px,
+      #e4e4e7 18px,
+      transparent 18px
+    );
+  border: none;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  background: #e4e4e7;
+  border: none;
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 24px;
+  border-radius: 12px;
+  background: #0d9488;
+  border: none;
+  margin-top: -6px;
+}
+
+/* Square thumb */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 28px;
+  width: 28px;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+  border: none;
+  margin-top: -2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 28px;
+  width: 28px;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Hide number input arrows */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }

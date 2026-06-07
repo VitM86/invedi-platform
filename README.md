@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Invedi Platform — frontend
 
-## Getting Started
+White-label / multi-tenant marketplace for premium **new-build developments** in Europe
+(initial focus: Portugal & Spain). This repo is the **frontend** (Next.js). It is currently a
+hi-fidelity prototype with mock data — there is no backend yet; this is where backend
+integration will happen.
 
-First, run the development server:
+**Live (prototype):** https://invedi-platform.vercel.app
+
+---
+
+## Stack
+
+- **Next.js 16** (App Router, Turbopack) + **React 19** + **TypeScript**
+- **Tailwind CSS v4** (design tokens in `src/app/globals.css`)
+- **Mapbox GL JS v3** (terrain bird-view + live Explore/project maps)
+- Deployed on **Vercel** (project `invedi-platform`)
+
+## Prerequisites
+
+- **Node.js 20+** (developed on Node 24)
+- npm (a `package-lock.json` is committed)
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone git@github.com:VitM86/invedi-platform.git
+cd invedi-platform
+npm install
+cp .env.example .env.local   # then fill in the Mapbox token (optional for local dev)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without a Mapbox token the app still runs — every map falls back to a static placeholder.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) on `localhost:3000` |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | optional (recommended) | Public Mapbox token (`pk.…`). Browser-safe; restrict by URL before production. See `.env.example`. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`.env.local` is gitignored. On Vercel, env vars live in **Project → Settings → Environment Variables**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/
+  app/                     # routes (App Router)
+    page.tsx               # landing (/)
+    explore/               # /explore — map / regions / grid discovery
+    projects/[slug]/       # project page (+ units/[id] unit pages)
+    comporta/              # terrain bird-view map demo
+    globals.css            # design tokens (colors, fonts, animations)
+  components/
+    wireframe/             # product UI: header, footer, cards, landing/, project/, explore/, unit/
+    map/                   # Mapbox components (TerrainMap, overlays)
+  lib/
+    mock-data.ts           # ⬅ all placeholder data (projects, units, regions, sales status)
+    images.ts              # image assignment (exterior-first, deterministic)
+public/images/             # local images (regions, exteriors, gallery renders)
+scripts/                   # one-off dev utilities (image fetch, screenshots) — not app code
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Prototype notes (for backend integration)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **All data is mock** and lives in [`src/lib/mock-data.ts`](src/lib/mock-data.ts) — projects,
+  units, regions, and the sales-status fields. This is the seam to replace with a real API/DB.
+- **`% sold` and `sales started`** are display-only mock values (see `salesStatusFor`); units
+  count / availability are derived from the unit list. Promote to real fields when data lands.
+- **Units gate** (project page) is a **prototype, not auth** — any email unlocks the detailed
+  units table for the session (`src/components/wireframe/UnlockProvider.tsx`). Real auth is TBD.
+- **Images** are prototype-only (Wikimedia Commons, CC) — replace with owned/licensed assets
+  before production. Each project leads with an exterior shot (`src/lib/images.ts`).
+- Search the codebase for `TODO(open-question)` — these flag decisions deferred to real data /
+  product calls.
+
+## Deployment & workflow
+
+- Hosted on **Vercel** (project `invedi-platform`, aliased to `invedi-platform.vercel.app`).
+- Recommended flow once the GitHub↔Vercel integration is connected:
+  - push to **`main`** → Vercel builds & deploys to **production**;
+  - open a **branch + Pull Request** → Vercel posts a **preview URL** for review before merge.
+- Until the integration is connected, production is deployed manually with `vercel deploy --prod`.
