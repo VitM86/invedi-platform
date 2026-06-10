@@ -167,6 +167,17 @@ export function HeroV3() {
             </motion.div>
           </div>
 
+          {/* Bottom hairline — 1px warm-neutral line along the very bottom of the hero card.
+              Implemented as an absolutely-positioned div (not a CSS border) so its z-index is
+              explicit and it sits ABOVE the HeroBackground overlays (multiply gradient + mid-band
+              darken + bottom darken) — those would otherwise paint over a CSS border. 1px solid
+              (not 0.5px) to render reliably across non-retina displays + subpixel rounding. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-px"
+            style={{ backgroundColor: "rgba(245, 232, 205, 0.92)" }}
+          />
+
           {/* Bottom captions — three serif lines, same baseline, equal padding. 3-col grid
               with left/center/right text alignment. Side captions hide on mobile. */}
           <motion.div
