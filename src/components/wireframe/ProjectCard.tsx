@@ -14,7 +14,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Project } from "@/lib/mock-data";
-import { formatPriceRange, formatRange } from "@/lib/mock-data";
+import { availabilityOf, formatPriceRange, formatRange } from "@/lib/mock-data";
 import { projectImages, projectThumb } from "@/lib/images";
 import { VerifiedBadge } from "./VerifiedBadge";
 
@@ -128,12 +128,21 @@ export function ProjectCard({ project }: { project: Project }) {
           <p className="text-xs font-medium text-text-muted">{project.completion}</p>
         </div>
 
-        {/* Spec chips */}
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <Chip icon="bed" label={`${formatRange(project.bedroomsMin, project.bedroomsMax, "")} bed`} />
-          <Chip icon="area" label={`${formatRange(project.areaMin, project.areaMax, "")} m²`} />
-          <Chip icon="floors" label={`${project.totalUnits} units`} />
-        </div>
+        {/* Spec chips. The units chip is replaced with the absolute availability label per
+            founder feedback (e.g. "4 of 6 units available"). Slightly smaller text since the
+            string is longer than the bare "6 units" it replaces; still legible. */}
+        {/* TODO(open-question): founder to confirm — absolute availability on cards + % sold
+            on project page, or unify to one format. */}
+        {(() => {
+          const a = availabilityOf(project);
+          return (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <Chip icon="bed" label={`${formatRange(project.bedroomsMin, project.bedroomsMax, "")} bed`} />
+              <Chip icon="area" label={`${formatRange(project.areaMin, project.areaMax, "")} m²`} />
+              <Chip icon="floors" label={`${a.available} of ${a.total} units available`} />
+            </div>
+          );
+        })()}
 
         {/* Footer CTA — no Reserve; opens the project */}
         <Link
@@ -169,11 +178,20 @@ export function CompactProjectCard({ project }: { project: Project }) {
         <h4 className="truncate text-sm font-bold text-text">{project.name}</h4>
         <p className="truncate text-xs text-text-muted">{project.developer}</p>
         <LocationLine project={project} className="mt-1 text-xs" />
-        <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
-          <span className="text-sm font-semibold text-primary-dark">
+        {/* Compact popover: price on its own line because the full €X,XXX,XXX – €Y,YYY,YYY
+            won't fit alongside the availability stat at 256px width. */}
+        <div className="mt-2 border-t border-border pt-2">
+          <span className="block text-sm font-semibold text-primary-dark">
             {formatPriceRange(project.priceMin, project.priceMax)}
           </span>
-          <span className="text-xs text-text-muted">{project.totalUnits} units</span>
+          {(() => {
+            const a = availabilityOf(project);
+            return (
+              <span className="mt-0.5 block text-xs text-text-muted">
+                {a.available} of {a.total} available
+              </span>
+            );
+          })()}
         </div>
         <Link
           href={`/projects/${project.slug}`}

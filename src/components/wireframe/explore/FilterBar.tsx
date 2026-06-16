@@ -12,7 +12,14 @@
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/mock-data";
-import { DEFAULT_FILTERS, PRICE_CEIL, PRICE_FLOOR, bedLabel, type Filters } from "./types";
+import {
+  COMPLETION_OPTIONS,
+  DEFAULT_FILTERS,
+  PRICE_CEIL,
+  PRICE_FLOOR,
+  bedLabel,
+  type Filters,
+} from "./types";
 import { useClickAway } from "./filterControls";
 import {
   AmenitiesSection,
@@ -76,11 +83,18 @@ export function FilterBar({
       }`
     : "Price";
 
+  // Completion (delivery) is promoted to the inline row alongside Price — both are mandated
+  // "always visible" filters per the founder's filter-language convention. So `moreCount`
+  // no longer counts it.
   const moreCount =
     (filters.areaMin > 0 ? 1 : 0) +
-    (filters.completion !== "any" ? 1 : 0) +
     (filters.amenities.length ? 1 : 0) +
     (filters.shortTermOnly ? 1 : 0);
+
+  const deliveryLabel =
+    filters.completion === "any"
+      ? "Delivery"
+      : `Delivery: ${COMPLETION_OPTIONS.find((o) => o.value === filters.completion)?.label ?? ""}`;
 
   return (
     <div className="rounded-lg border border-border bg-white p-3">
@@ -96,6 +110,12 @@ export function FilterBar({
         {/* Beds (always visible) */}
         <Popover label={filters.bedrooms > 0 ? `${bedLabel(filters.bedrooms)} beds` : "Beds"} active={filters.bedrooms > 0} width="w-64">
           {() => <BedsSection filters={filters} set={set} />}
+        </Popover>
+
+        {/* Delivery (completion) — promoted from "More filters" to inline so it sits in the
+            same visual pattern as Price (founder convention: every filter system shows both). */}
+        <Popover label={deliveryLabel} active={filters.completion !== "any"} width="w-64">
+          {() => <CompletionSection filters={filters} set={set} />}
         </Popover>
 
         {/* More filters */}
@@ -117,7 +137,6 @@ export function FilterBar({
           {() => (
             <div className="space-y-5">
               <AreaSection filters={filters} set={set} />
-              <CompletionSection filters={filters} set={set} />
               <AmenitiesSection filters={filters} set={set} />
               <ShortTermSection filters={filters} set={set} />
             </div>

@@ -175,7 +175,7 @@ export function ProjectCard({
             {project.name}
           </h3>
           <dl className="mt-2 space-y-1 text-[12.5px] text-white/80">
-            <Row icon={<UnitsIcon />} value={`${project.units} units`} />
+            <Row icon={<UnitsIcon />} value={`${project.available} of ${project.units} units available`} />
             <Row icon={<CalendarIcon />} value={`${project.completion}`} />
             <Row icon={<TagIcon />} value={formatPriceRangeM(project.priceFrom, project.priceTo)} />
           </dl>

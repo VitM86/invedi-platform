@@ -719,24 +719,45 @@ export function salesStatusFor(p: Project): SalesStatusInfo {
 /* Formatting helpers                                                  */
 /* ------------------------------------------------------------------ */
 
-export function formatPrice(eur: number): string {
-  if (eur >= 1_000_000) {
-    const m = eur / 1_000_000;
-    return `€${m.toFixed(m % 1 === 0 ? 0 : 1)}M`;
-  }
-  return `€${Math.round(eur / 1000)}K`;
-}
-
+/**
+ * Canonical EUR formatter. ONE utility used everywhere — anything new that displays a price
+ * should call this directly. Founder convention: NO abbreviations in luxury real estate
+ * listings ("€3,390,000", never "€3.4M"). Output uses en-IE locale (`,` thousands).
+ */
 export function formatPriceFull(eur: number): string {
   return `€${eur.toLocaleString("en-IE")}`;
 }
 
+/** Range form of formatPriceFull. Equal min/max collapses to a single amount. */
+export function formatPriceRangeFull(min: number, max: number): string {
+  return min === max ? formatPriceFull(min) : `${formatPriceFull(min)} – ${formatPriceFull(max)}`;
+}
+
+/**
+ * @deprecated kept as a thin wrapper over {@link formatPriceFull} for backwards-compat with
+ * existing callsites. Previously returned abbreviated form (`€3.4M` / `€405K`) — the founder
+ * mandated full amounts everywhere. New code should use `formatPriceFull`.
+ */
+export function formatPrice(eur: number): string {
+  return formatPriceFull(eur);
+}
+
+/** @deprecated wrapper over {@link formatPriceRangeFull}. New code: prefer the explicit name. */
 export function formatPriceRange(min: number, max: number): string {
-  return min === max ? formatPrice(min) : `${formatPrice(min)} – ${formatPrice(max)}`;
+  return formatPriceRangeFull(min, max);
 }
 
 export function formatRange(min: number, max: number, suffix: string): string {
   return min === max ? `${min}${suffix}` : `${min}–${max}${suffix}`;
+}
+
+/**
+ * Founder convention: "available" = NOT sold (so reserved units count as still available).
+ * Used by ProjectCard and any bulk module to render "X of N units available".
+ */
+export function availabilityOf(p: Project): { available: number; total: number } {
+  const sold = p.units.filter((u) => u.status === "sold").length;
+  return { available: p.totalUnits - sold, total: p.totalUnits };
 }
 
 /* ------------------------------------------------------------------ */
@@ -750,7 +771,7 @@ export function buildUnitSpecs(unit: Unit, project: Project) {
       Status: unit.status === "available" ? "Available" : unit.status === "reserved" ? "Reserved" : "Sold",
       Price: formatPriceFull(unit.price),
       "Usable surface area": `${unit.area} m²`,
-      "Price / m²": `€${Math.round(unit.price / unit.area).toLocaleString("en-IE")}`,
+      "Price / m²": formatPriceFull(Math.round(unit.price / unit.area)),
       "Floor number": `${unit.floor}`,
       Tenure: "Freehold",
       "Service costs / month": "€—  (placeholder)",

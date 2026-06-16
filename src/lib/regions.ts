@@ -16,6 +16,8 @@ export interface RegionProject {
   lng: number;
   lat: number;
   units: number;
+  /** Units not yet sold (reserved counts as available — same convention as availabilityOf). */
+  available: number;
   completion: number; // delivery year
   priceFrom: number; // EUR
   priceTo: number; // EUR
@@ -83,6 +85,7 @@ export const comporta: Region = {
       lng: -8.8045,
       lat: 38.3985,
       units: 74,
+      available: 50,
       completion: 2027,
       priceFrom: 1_200_000,
       priceTo: 1_800_000,
@@ -95,6 +98,7 @@ export const comporta: Region = {
       lng: -8.7585,
       lat: 38.3805,
       units: 28,
+      available: 21,
       completion: 2027,
       priceFrom: 1_600_000,
       priceTo: 3_200_000,
@@ -107,6 +111,7 @@ export const comporta: Region = {
       lng: -8.7855,
       lat: 38.3515,
       units: 41,
+      available: 33,
       completion: 2028,
       priceFrom: 950_000,
       priceTo: 2_200_000,
@@ -139,6 +144,7 @@ export const regions: Record<string, Region> = {
  * Graceful — never throws; missing pieces just render empty. Minimap hidden (it's PT-shaped).
  */
 import type { Project, ReferencePoint } from "./mock-data";
+import { availabilityOf } from "./mock-data";
 
 const SWATCH: [string, string] = ["#8a6a4a", "#cdb38c"];
 
@@ -153,6 +159,7 @@ export function buildRegionForProject(
     lng: p.lng,
     lat: p.lat,
     units: p.totalUnits,
+    available: availabilityOf(p).available,
     completion: p.completionYear ?? 2026,
     priceFrom: p.priceMin,
     priceTo: p.priceMax,
@@ -186,14 +193,19 @@ export function buildRegionForProject(
   };
 }
 
+/**
+ * Region-scoped re-exports of the canonical EUR formatter from mock-data. Kept under the
+ * legacy "M" names so existing terrain-map callsites compile unchanged. Founder convention:
+ * NO abbreviations anywhere — these no longer return `€3.4M`/`€405K` but the full amount.
+ */
+import { formatPriceFull, formatPriceRangeFull } from "./mock-data";
+
+/** @deprecated alias for {@link formatPriceFull}. New code should import directly. */
 export function formatPriceM(eur: number): string {
-  if (eur >= 1_000_000) {
-    const m = eur / 1_000_000;
-    return `€${m.toFixed(1)}M`;
-  }
-  return `€${Math.round(eur / 1000)}K`;
+  return formatPriceFull(eur);
 }
 
+/** @deprecated alias for {@link formatPriceRangeFull}. New code should import directly. */
 export function formatPriceRangeM(from: number, to: number): string {
-  return `${formatPriceM(from)} – ${formatPriceM(to)}`;
+  return formatPriceRangeFull(from, to);
 }
