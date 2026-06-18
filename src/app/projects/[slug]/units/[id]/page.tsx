@@ -14,6 +14,7 @@ import { MortgageWidget } from "@/components/MortgageWidget";
 import { SiteHeader } from "@/components/wireframe/SiteHeader";
 import { SalesSheetProvider } from "@/components/wireframe/SalesSheetProvider";
 import { UnitHeroCtas, AdvisorCard } from "@/components/wireframe/unit/UnitCtas";
+import { ReserveCtas } from "@/components/wireframe/reserve/ReserveCtas";
 import { PhiButton } from "@/components/wireframe/PhiButton";
 import { projectImages } from "@/lib/images";
 
@@ -110,8 +111,13 @@ export default async function UnitPage({
                 {unit.terraceArea && <Chip icon="terrace" label={`${unit.terraceArea} m² terrace`} />}
               </div>
 
-              {/* CTAs — Speak to advisor (primary) + Get sales pack (secondary). No Reserve. */}
-              <UnitHeroCtas />
+              {/* CTAs — branch on `project.isCurated`. Curated units lead with Reserve
+                  (the two-step paid flow); non-curated keep the legacy advisor/pack pair. */}
+              {project.isCurated ? (
+                <ReserveCtas project={project} unit={unit} />
+              ) : (
+                <UnitHeroCtas />
+              )}
             </div>
           </div>
 

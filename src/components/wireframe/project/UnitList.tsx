@@ -9,6 +9,7 @@
 import Link from "next/link";
 import type { Project, Unit, UnitStatus } from "@/lib/mock-data";
 import { formatPriceFull } from "@/lib/mock-data";
+import { ReserveButton } from "../reserve/ReserveButton";
 
 const GRID = "sm:grid-cols-[1.4fr_1fr_0.7fr_0.9fr_1.1fr_auto]";
 
@@ -56,9 +57,17 @@ export function UnitRow({ project, unit }: { project: Project; unit: Unit }) {
       <div className="text-right font-semibold text-text sm:text-left">{formatPriceFull(unit.price)}</div>
       <div className="flex items-center justify-start gap-3 sm:justify-end">
         <StatusBadge status={unit.status} />
-        <svg className="hidden h-4 w-4 text-text-muted sm:block" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
+        {/* On CURATED projects, available units get an inline Reserve trigger. The button
+            stops propagation so the row's outer <Link> doesn't navigate. Non-available units
+            and non-curated projects fall back to the chevron, preserving the old "click row
+            to view detail" affordance. */}
+        {project.isCurated && unit.status === "available" ? (
+          <ReserveButton project={project} unit={unit} size="sm" />
+        ) : (
+          <svg className="hidden h-4 w-4 text-text-muted sm:block" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        )}
       </div>
     </Link>
   );

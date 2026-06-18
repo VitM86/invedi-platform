@@ -51,6 +51,13 @@ export interface Project {
   // consented/managed. Current decision: Tier 1 uses the SAME UI as 2/3 and the verified
   // badge alone carries the distinction. Revisit if Tier 1 needs a stripped-down card.
   tier: 1 | 2 | 3;
+  /**
+   * Curated = projects the Invedi team can actually sell. Gates the Reserve flow: on curated
+   * projects the primary buyer CTA becomes "Reserve" (paid two-step, manually confirmed);
+   * non-curated projects keep the lighter CTAs (Speak to advisor / Get sales pack / Request
+   * access). Set per-project in the SEEDS array — ~3-4 curated for the demo.
+   */
+  isCurated: boolean;
   trustNote: string;
 
   /** Placeholder narrative copy. */
@@ -169,6 +176,7 @@ type ProjectSeed = {
   regionId: string;
   verified: boolean;
   tier: 1 | 2 | 3;
+  isCurated: boolean;
   completion: string;
   completionYear: number | null;
   amenities: string[];
@@ -194,6 +202,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Amsterdam",
     verified: true,
     tier: 3,
+    isCurated: true,
     completion: "Q4 2026",
     completionYear: 2026,
     amenities: ["Concierge", "Gym", "Parking", "Roof terrace", "EV charging"],
@@ -217,6 +226,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Rotterdam",
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
+    isCurated: false,
     completion: "Q2 2027",
     completionYear: 2027,
     amenities: ["Parking", "Storage", "Co-working"],
@@ -240,6 +250,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Alicante",
     verified: true,
     tier: 2,
+    isCurated: true,
     completion: "Q1 2028",
     completionYear: 2028,
     amenities: ["Pool", "Gym", "Spa", "Garden", "Parking"],
@@ -263,6 +274,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Málaga",
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
+    isCurated: false,
     completion: "Completed",
     completionYear: null,
     amenities: ["Pool", "Garden", "Parking", "Storage"],
@@ -286,6 +298,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Porto",
     verified: true,
     tier: 3,
+    isCurated: true,
     completion: "Q3 2027",
     completionYear: 2027,
     amenities: ["Roof terrace", "Concierge", "Gym", "EV charging"],
@@ -309,6 +322,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Paris",
     verified: true,
     tier: 2,
+    isCurated: false,
     completion: "Q4 2027",
     completionYear: 2027,
     amenities: ["Concierge", "Parking", "Co-working", "Storage", "EV charging"],
@@ -332,6 +346,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Berlin",
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
+    isCurated: false,
     completion: "Q2 2026",
     completionYear: 2026,
     amenities: ["Gym", "Co-working", "Parking", "EV charging"],
@@ -355,6 +370,7 @@ const SEEDS: ProjectSeed[] = [
     city: "Athens",
     verified: true,
     tier: 3,
+    isCurated: true,
     completion: "Q1 2027",
     completionYear: 2027,
     amenities: ["Pool", "Spa", "Roof terrace", "Garden", "Parking"],
@@ -391,6 +407,7 @@ function buildProject(seed: ProjectSeed): Project {
     regionId: seed.regionId,
     verified: seed.verified,
     tier: seed.tier,
+    isCurated: seed.isCurated,
     trustNote: seed.verified
       ? "Placeholder trust note. Verified projects pass Invedi's listing checks (developer identity, planning permits, sales mandate). Exact criteria are TBD."
       : "Placeholder note. This project is not yet verified — developer consent and document checks are pending.",
