@@ -6,7 +6,6 @@ import { WhyInvediV2 } from "@/components/wireframe/landing-v2/WhyInvediV2";
 import { MarketFocusV2 } from "@/components/wireframe/landing-v2/MarketFocusV2";
 import { HeroV3 } from "@/components/wireframe/landing-v3/HeroV3";
 import { AllProjectsGridV3 } from "@/components/wireframe/landing-v3/AllProjectsGridV3";
-import { UserTypeCtaV3 } from "@/components/wireframe/landing-v3/UserTypeCtaV3";
 
 /** Display serif scoped to /v3 (same approach as /v2). */
 const fraunces = Fraunces({
@@ -17,10 +16,16 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// TEMP: hidden per founder, do not delete — the "Curated infrastructure for new-build real
+// estate" band (WhyInvediV2 component) is intentionally kept in the bundle so we can flip
+// this flag back to `true` to bring it back without a code rewrite. The component, copy,
+// and styling are unchanged; only its render on /v3 is gated.
+const SHOW_CURATED_INFRA = false;
+
 export const metadata: Metadata = {
   title: "Invedi v3 — editorial preview",
   description:
-    "Editorial preview v3 — inventory-first homepage: hero, full projects grid, regions, why Invedi, audience CTAs.",
+    "Editorial preview v3 — inventory-first homepage: hero, full projects grid, regions.",
   robots: { index: false, follow: false },
 };
 
@@ -28,13 +33,14 @@ export const metadata: Metadata = {
 //   1. Hero (kept; HeroBackground stays swappable for future video/slideshow).
 //   2. Full projects grid directly below the hero (NOT a 4-card featured selection).
 //   3. Country/region cards (MarketFocus) — entry points into Explore filtered by market.
-//   4. Why Invedi (kept).
-//   5. Compact audience CTA band (Buyer / Agent / Developer) — replaces the old TwoAudience.
-//   6. Footer.
+//   4. Why Invedi — gated behind SHOW_CURATED_INFRA (currently false, per founder).
+//   5. Footer.
 //
-// Background rhythm: hero (photo) → warm → white → dark slate → warm → footer.
-// Photo-break interludes from the prior /v3 are intentionally removed — the inventory takes
-// their visual weight now.
+// The audience CTA band (Buyer / Agent / Developer) was removed at this revision — the
+// founder felt it overcomplicated the page. UserTypeCtaV3 component still exists so it
+// can be reused later without rewriting it; it's just no longer rendered here.
+//
+// Background rhythm: hero (photo) → warm → white → footer.
 export default function V3Landing() {
   return (
     <div className={`${fraunces.variable} min-h-screen bg-white`}>
@@ -42,8 +48,7 @@ export default function V3Landing() {
       <main>
         <AllProjectsGridV3 />
         <MarketFocusV2 />
-        <WhyInvediV2 />
-        <UserTypeCtaV3 />
+        {SHOW_CURATED_INFRA && <WhyInvediV2 />}
       </main>
       <SiteFooter />
     </div>

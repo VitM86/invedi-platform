@@ -721,11 +721,15 @@ export function salesStatusFor(p: Project): SalesStatusInfo {
 
 /**
  * Canonical EUR formatter. ONE utility used everywhere — anything new that displays a price
- * should call this directly. Founder convention: NO abbreviations in luxury real estate
- * listings ("€3,390,000", never "€3.4M"). Output uses en-IE locale (`,` thousands).
+ * should call this directly. Founder conventions, both at once:
+ *   - NO abbreviations ("€3.390.000", never "€3.4M") — luxury real estate credibility.
+ *   - Period as thousands separator ("€3.390.000", not "€3,390,000") — European/Dutch/PT/ES
+ *     convention for the platform's target audience. Whole euros only, no decimal portion.
+ * `nl-NL` is used because the platform originated in the Netherlands and `.` thousands is
+ * shared across NL/DE/PT/ES locales — swap if the audience focus shifts.
  */
 export function formatPriceFull(eur: number): string {
-  return `€${eur.toLocaleString("en-IE")}`;
+  return `€${eur.toLocaleString("nl-NL")}`;
 }
 
 /** Range form of formatPriceFull. Equal min/max collapses to a single amount. */

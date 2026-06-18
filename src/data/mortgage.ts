@@ -214,8 +214,14 @@ export function calculateNLTaxBenefit(
   return (monthlyInterest * deductionRate) / 100;
 }
 
+/**
+ * Mortgage-scoped EUR formatter. Mirrors the platform-wide `formatPriceFull` convention:
+ * period thousands separator (NL/DE/PT/ES audience), whole euros, no decimals.
+ * Defined locally instead of importing because mortgage.ts is a leaf data module — keeping
+ * it dependency-free preserves easy tree-shaking in the mortgage widget bundle.
+ */
 export function formatEuro(amount: number): string {
-  return new Intl.NumberFormat("en-IE", {
+  return new Intl.NumberFormat("nl-NL", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 0,

@@ -86,7 +86,7 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
                     </div>
                   </td>
                   <td className="px-2.5 py-3 text-right font-medium text-text">
-                    €{pricePerM2(p).toLocaleString("en-IE")}
+                    €{pricePerM2(p).toLocaleString("nl-NL")}
                   </td>
                   <td className="px-2.5 py-3 text-right text-text">{p.totalUnits}</td>
                   <td className="px-2.5 py-3 text-right text-text">{avgBedrooms(p)}</td>
