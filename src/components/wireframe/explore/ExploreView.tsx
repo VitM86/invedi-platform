@@ -11,7 +11,7 @@
 
 import { useMemo, useState } from "react";
 import { projects, type CountryCode } from "@/lib/mock-data";
-import { SiteHeader } from "../SiteHeader";
+import { AppHeader } from "../AppHeader";
 import { FilterBar } from "./FilterBar";
 import { FilterButton } from "./FilterButton";
 import { FilterSheet } from "./FilterSheet";
@@ -90,7 +90,7 @@ export function ExploreView({ initialView = "regions" }: { initialView?: ViewMod
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <AppHeader />
 
       <main className="mx-auto w-full max-w-[1440px] px-6 py-6 lg:px-10">
         {/* Page heading */}

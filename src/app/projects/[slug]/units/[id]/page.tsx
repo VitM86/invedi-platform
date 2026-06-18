@@ -11,7 +11,7 @@ import {
 } from "@/lib/mock-data";
 import { ImageGallery } from "@/components/ImageGallery";
 import { MortgageWidget } from "@/components/MortgageWidget";
-import { SiteHeader } from "@/components/wireframe/SiteHeader";
+import { AppHeader } from "@/components/wireframe/AppHeader";
 import { SalesSheetProvider } from "@/components/wireframe/SalesSheetProvider";
 import { UnitHeroCtas, AdvisorCard } from "@/components/wireframe/unit/UnitCtas";
 import { ReserveCtas } from "@/components/wireframe/reserve/ReserveCtas";
@@ -60,7 +60,7 @@ export default async function UnitPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <AppHeader />
 
       <SalesSheetProvider context={`${project.name} › ${unit.name}`}>
         <main className="mx-auto max-w-[1440px] px-6 py-6 lg:px-16">

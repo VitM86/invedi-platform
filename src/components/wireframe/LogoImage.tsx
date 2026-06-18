@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * LogoImage — graceful logo loader for the /v3 headers.
+ * LogoImage — graceful logo loader for the headers (AppHeader + the /v3 hero glass navbar).
  *
  * Uses a plain <img> (with the next-image lint disabled) so we get a real onError event and
  * can swap to a text "Invedi" wordmark if the PNG ever fails to load — the brief mandates
@@ -9,7 +9,7 @@
  *
  * The fallback wordmark color is passed in so the same component fits both contexts:
  *   - Hero glass header (light/gold logo on dark photo) → fallback color `text-white`
- *   - Scrolled light header (dark logo on white) → fallback color `text-primary-dark`
+ *   - Scrolled / internal light header (dark logo on white) → fallback color `text-primary-dark`
  *
  * Sizing is driven entirely by the caller via className (e.g. `h-11 lg:h-12 w-auto`); the PNG
  * downsamples on retina because the source asset is 790×549 — well above any header height.

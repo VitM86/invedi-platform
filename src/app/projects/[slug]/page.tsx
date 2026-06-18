@@ -8,7 +8,7 @@ import {
   formatRange,
   type Project,
 } from "@/lib/mock-data";
-import { SiteHeader } from "@/components/wireframe/SiteHeader";
+import { AppHeader } from "@/components/wireframe/AppHeader";
 import { VerifiedBadge } from "@/components/wireframe/VerifiedBadge";
 import { ProjectGallery } from "@/components/wireframe/project/ProjectGallery";
 import { ProjectActions } from "@/components/wireframe/project/ProjectActions";
@@ -45,7 +45,7 @@ export default async function ProjectPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
+      <AppHeader />
 
       <main className="mx-auto max-w-[1440px] px-6 py-6 lg:px-10">
         {/* Breadcrumb */}

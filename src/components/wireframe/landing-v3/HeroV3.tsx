@@ -37,9 +37,9 @@ import {
 } from "framer-motion";
 import type { CSSProperties } from "react";
 import { SUBHEAD_OPTIONS } from "../landing/Hero";
+import { AppHeader } from "../AppHeader";
 import { HeroBackground } from "./HeroBackground";
 import { HeroNavbarV3 } from "./HeroNavbarV3";
-import { V3LightHeader } from "./V3LightHeader";
 
 const SERIF: CSSProperties = { fontFamily: "var(--font-serif)" };
 
@@ -200,10 +200,12 @@ export function HeroV3() {
         </div>
       </section>
 
-      {/* Fixed light V3LightHeader — /v3-only variant of the scrolled header. Mirrors the
-          hero glass navbar's three-part layout (links left / logo center / Sign in right)
-          with the DARK logo and no avatar. Invisible while the user is in the hero, fades
-          in as they scroll past it. pointer-events: none until visible enough to be useful. */}
+      {/* Fixed light AppHeader — the SAME shared header used on /explore and project pages.
+          Mirrors the hero glass navbar's three-part layout (links left / logo center / Sign
+          in right). Invisible while the user is in the hero, fades in as they scroll past
+          it. pointer-events: none until visible enough to be useful. The AppHeader is
+          sticky-positioned for its normal internal-page use, but here the wrapping
+          motion.div is position:fixed which takes precedence — sticky is a no-op. */}
       <motion.div
         style={{
           opacity: lightOpacity,
@@ -212,7 +214,7 @@ export function HeroV3() {
         className="fixed inset-x-0 top-0 z-40"
         aria-hidden={!lightInteractive}
       >
-        <V3LightHeader />
+        <AppHeader />
       </motion.div>
     </>
   );

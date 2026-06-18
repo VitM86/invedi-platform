@@ -16,7 +16,7 @@
 
 import Link from "next/link";
 import { type MotionValue, motion } from "framer-motion";
-import { LogoImage } from "./LogoImage";
+import { LogoImage } from "../LogoImage";
 
 export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<number> }) {
   return (
