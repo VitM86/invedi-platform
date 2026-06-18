@@ -15,8 +15,8 @@
  */
 
 import Link from "next/link";
-import Image from "next/image";
 import { type MotionValue, motion } from "framer-motion";
+import { LogoImage } from "./LogoImage";
 
 export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<number> }) {
   return (
@@ -40,16 +40,15 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
             <NavLink href="#" className="hidden md:inline-flex">About</NavLink>
           </div>
 
-          {/* Center: Invedi monogram + wordmark (the new logo) */}
+          {/* Center: Invedi monogram + wordmark — LIGHT variant (gold monogram + cream
+              wordmark) so it reads on the dark hero photo. Graceful fallback to a white
+              "Invedi" text wordmark if the PNG ever fails to load. */}
           <div className="flex items-center justify-center">
             <Link href="/" aria-label="Invedi — home" className="inline-flex items-center">
-              <Image
-                src="/images/logo.svg"
-                alt="Invedi"
-                width={84}
-                height={64}
-                priority
+              <LogoImage
+                src="/images/logo-light.png"
                 className="h-11 w-auto lg:h-12"
+                fallbackColorClass="text-white"
               />
             </Link>
           </div>
