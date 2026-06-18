@@ -74,18 +74,8 @@ export function ProjectCard({ project }: { project: Project }) {
           aria-label={`View ${project.name}`}
         />
 
-        {/* Badges (non-interactive) */}
-        <div className="pointer-events-none absolute left-3 top-3 z-20">
-          <VerifiedBadge verified={project.verified} />
-        </div>
-        <button
-          onClick={(e) => e.preventDefault()}
-          className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded bg-white/90 px-2 py-1 text-xs font-semibold text-text shadow-sm hover:bg-white"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/icon-heart.svg" alt="" className="h-3.5 w-3.5" />
-          Save
-        </button>
+        {/* Verified badge removed per founder */}
+        {/* Save button removed per founder */}
 
         {/* Carousel arrows */}
         <button
