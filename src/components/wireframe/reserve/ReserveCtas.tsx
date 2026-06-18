@@ -18,7 +18,11 @@ export function ReserveCtas({ project, unit }: { project: Project; unit: Unit })
   return (
     <div>
       <div className="mb-3 space-y-2">
-        <ReserveButton project={project} unit={unit} size="md" />
+        {/* Hero CTA is the discoverable entry to the flow, not a progress indicator — keep
+            it labelled "Reserve" even when the user has a half-finished session. The table
+            row buttons (size="sm") still show state-aware labels so users can find their
+            in-progress flow. */}
+        <ReserveButton project={project} unit={unit} size="md" label="Reserve" />
         <button
           onClick={() => openSales("advisor")}
           className="flex h-12 w-full items-center justify-center gap-2 rounded text-base font-semibold text-accent hover:underline"

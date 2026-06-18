@@ -28,15 +28,24 @@ export function ReserveButton({
   project,
   unit,
   size = "sm",
+  label: labelOverride,
 }: {
   project: Project;
   unit: Unit;
   /** Compact (sm) for table rows; default (md) for hero blocks. */
   size?: "sm" | "md";
+  /**
+   * Optional fixed label override. The hero CTA on the unit page passes "Reserve" so the
+   * primary action reads as the discoverable entry point regardless of how far along the
+   * flow the user is. The unit-table rows omit this prop and keep the state-aware label
+   * ("Continue" / "Pending" / "Pay remaining" / "Reserved") — that progress indication is
+   * useful inline next to other units.
+   */
+  label?: string;
 }) {
   const { openFor, stateOf } = useReserve();
   const state = stateOf(project.slug, unit.id);
-  const label = LABEL_BY_STATE[state] ?? "Reserve";
+  const label = labelOverride ?? LABEL_BY_STATE[state] ?? "Reserve";
   const isTerminal = state === "reserved";
 
   const baseSm =
