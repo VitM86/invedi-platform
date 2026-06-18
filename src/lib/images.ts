@@ -25,8 +25,9 @@ export const GALLERY_IMAGES = [
 ];
 
 /** Exterior / architectural shots — always shown first.
- *  Pool of 11 building photos (8 projects assigned randomly via `extHash`). With more images
- *  than projects, adjacency duplicates in the grid are less likely than with the old 5-pool. */
+ *  Pool of 9 LANDSCAPE building photos (8 projects assigned via `extHash`). Two portrait-framed
+ *  originals were dropped so every card slot (4:3 landscape) shows a building in its intended
+ *  framing instead of a vertical center-crop. */
 export const EXTERIOR_IMAGES = [
   "/images/buildings/building-01.jpg",
   "/images/buildings/building-02.jpg",
@@ -35,10 +36,8 @@ export const EXTERIOR_IMAGES = [
   "/images/buildings/building-05.jpg",
   "/images/buildings/building-06.jpg",
   "/images/buildings/building-07.jpg",
-  "/images/buildings/building-08.jpg",
-  "/images/buildings/building-09.jpg",
-  "/images/buildings/building-10.jpeg",
-  "/images/buildings/building-11.jpeg",
+  "/images/buildings/building-08.jpeg",
+  "/images/buildings/building-09.jpeg",
 ];
 
 /** Stable hash from a string so image selection is deterministic. */
@@ -49,7 +48,7 @@ function hash(str: string): number {
 }
 
 /** Second hash (different prime) for the exterior pick — spreads the 8 projects evenly across
- * the 5 exteriors instead of clustering, and decorrelates it from the interior rotation. */
+ * the 9 exteriors instead of clustering, and decorrelates it from the interior rotation. */
 function extHash(str: string): number {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (h * 53 + str.charCodeAt(i)) % 100000;
