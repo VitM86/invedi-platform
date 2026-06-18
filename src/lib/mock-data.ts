@@ -34,6 +34,27 @@ export interface Unit {
   terraceArea?: number;
 }
 
+/**
+ * ProjectReview — the Invedi editorial assessment shown on each project page. All values are
+ * HAND-AUTHORED placeholder content — there is no formula, no computation. The verdict label
+ * uses one of three controlled strings so the badge color/style can be picked deterministically.
+ */
+export type ReviewVerdict = "Recommended" | "Recommended with reservations" | "Not recommended";
+
+export interface ProjectReview {
+  /** Out of 10, one decimal (e.g. 8.3). Maps to a half-step 5-star view in StarScore. */
+  score: number;
+  verdict: ReviewVerdict;
+  /** Two-to-three-sentence neutral analytical summary explaining the score. */
+  summary: string;
+  /** Short positive points. Aim for 3. */
+  strengths: string[];
+  /** "Points of attention" framing (Independer-style) — neutral, NOT alarmist. Aim for 2. */
+  considerations: string[];
+  /** Five-criterion breakdown with a per-line score and one-line note. */
+  criteria: { label: string; score: number; note: string }[];
+}
+
 export interface Project {
   slug: string;
   name: string;
@@ -58,6 +79,10 @@ export interface Project {
    * access). Set per-project in the SEEDS array — ~3-4 curated for the demo.
    */
   isCurated: boolean;
+  /** Editorial Invedi review — hand-authored, NOT computed. Founder direction: project pages
+   *  read as neutral independent assessments (Independer-style verdict) rather than vendor
+   *  marketing. See `ProjectReview` for the shape. */
+  review: ProjectReview;
   trustNote: string;
 
   /** Placeholder narrative copy. */
@@ -177,6 +202,7 @@ type ProjectSeed = {
   verified: boolean;
   tier: 1 | 2 | 3;
   isCurated: boolean;
+  review: ProjectReview;
   completion: string;
   completionYear: number | null;
   amenities: string[];
@@ -203,6 +229,29 @@ const SEEDS: ProjectSeed[] = [
     verified: true,
     tier: 3,
     isCurated: true,
+    // TODO(content): placeholder editorial scores, to be replaced with real assessments.
+    review: {
+      score: 8.4,
+      verdict: "Recommended",
+      summary:
+        "Strong fundamentals on every measurable axis: a credible developer, an established Amsterdam location with reliable demand, and pricing that aligns with comparable new-builds. The block is best described as solid rather than exceptional — there's no edge that screams 'underpriced' but very little downside risk either.",
+      strengths: [
+        "Established developer with prior on-time delivery in the region",
+        "Strong rental demand fundamentals in central Amsterdam",
+        "EV charging, concierge and roof terrace lift the long-term resale story",
+      ],
+      considerations: [
+        "Asking price sits at the higher end of comparable Q4 2026 deliveries",
+        "Service-cost structure not yet finalised — flag with the developer",
+      ],
+      criteria: [
+        { label: "Location", score: 9.0, note: "Central Amsterdam, walkable to the canals and well-served by tram and metro." },
+        { label: "Price vs area", score: 7.5, note: "Roughly in line with the area; a small premium for the brand." },
+        { label: "Developer track record", score: 8.5, note: "Three prior schemes delivered within budget and schedule." },
+        { label: "Build quality & energy", score: 8.0, note: "A-rated energy label and a heat-pump spec for all units." },
+        { label: "Liquidity & resale", score: 8.5, note: "Highly liquid Amsterdam segment; strong renter demand." },
+      ],
+    },
     completion: "Q4 2026",
     completionYear: 2026,
     amenities: ["Concierge", "Gym", "Parking", "Roof terrace", "EV charging"],
@@ -227,6 +276,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
     isCurated: false,
+    review: {
+      score: 6.7,
+      verdict: "Recommended with reservations",
+      summary:
+        "A respectable but unverified Rotterdam-South entry. Sales mandate documents are still pending so the project sits behind Invedi's Tier-1 disclosure and we cannot independently confirm the developer's planning permits or financial standing. Worth a closer look once Tier-2 verification clears.",
+      strengths: [
+        "Competitive entry pricing for the Rotterdam new-build segment",
+        "Short-term letting permitted — opens up rental flexibility",
+        "Co-working amenity reflects a measured-but-modern programme",
+      ],
+      considerations: [
+        "Developer identity and sales mandate not yet verified by the Invedi team",
+        "Co-working as the lead amenity reads modest for a Q2 2027 listing",
+      ],
+      criteria: [
+        { label: "Location", score: 7.0, note: "Rotterdam-South: emerging area, infrastructure improving but not central." },
+        { label: "Price vs area", score: 7.5, note: "Below the regional median — meaningful but not extraordinary." },
+        { label: "Developer track record", score: 5.0, note: "Tier-1 status; no public history to verify against." },
+        { label: "Build quality & energy", score: 6.5, note: "Energy spec aligned with code; nothing above." },
+        { label: "Liquidity & resale", score: 7.0, note: "Rotterdam liquidity is improving but still thinner than Amsterdam." },
+      ],
+    },
     completion: "Q2 2027",
     completionYear: 2027,
     amenities: ["Parking", "Storage", "Co-working"],
@@ -251,6 +322,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true,
     tier: 2,
     isCurated: true,
+    review: {
+      score: 8.8,
+      verdict: "Recommended",
+      summary:
+        "Olive Grove is one of the strongest Costa-Blanca entries we currently track. The pool, gym and spa programme is genuinely premium for the price range, the developer has a clean delivery record, and Alicante's rental market remains robust year-round. Short-term letting adds optionality for a yield-focused buyer.",
+      strengths: [
+        "Premium amenity programme (pool, spa, gym) at a Costa Blanca entry price",
+        "Short-term letting permitted — supports yield-focused buyers",
+        "Verified developer with consistent delivery history",
+      ],
+      considerations: [
+        "Delivery in Q1 2028 — a longer wait than peer projects in the area",
+        "Pricing premium above the local mean is justified but not bargain-territory",
+      ],
+      criteria: [
+        { label: "Location", score: 9.0, note: "Alicante coastline: strong year-round rental demand." },
+        { label: "Price vs area", score: 8.0, note: "Mid-range for the spec — fair, not a bargain." },
+        { label: "Developer track record", score: 9.0, note: "Mediterra Estates: clean, multi-cycle record." },
+        { label: "Build quality & energy", score: 8.5, note: "Spec sheet exceeds local code on insulation and glazing." },
+        { label: "Liquidity & resale", score: 8.5, note: "Short-term-let permission widens the buyer pool." },
+      ],
+    },
     completion: "Q1 2028",
     completionYear: 2028,
     amenities: ["Pool", "Gym", "Spa", "Garden", "Parking"],
@@ -275,6 +368,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
     isCurated: false,
+    review: {
+      score: 5.9,
+      verdict: "Not recommended",
+      summary:
+        "Although technically a new-build inventory listing, Marina Vista is already complete and the remaining units have been on the market for a while. Documentation is incomplete (Tier 1) and pricing has not been adjusted downward despite the lengthening time-on-market. We're more cautious than not.",
+      strengths: [
+        "Completed building — buyers can inspect and move quickly",
+        "Pool and garden amenities are present and finished",
+        "Short-term-letting permitted in the building",
+      ],
+      considerations: [
+        "Project has been on the market for an extended period without price adjustments",
+        "Tier 1: developer and listing documents not yet verified by Invedi",
+      ],
+      criteria: [
+        { label: "Location", score: 7.0, note: "Costa del Sol: established but pricing competition is intense." },
+        { label: "Price vs area", score: 5.5, note: "Asking price out of line with the current absorption rate." },
+        { label: "Developer track record", score: 4.5, note: "Limited track record; no public delivery history." },
+        { label: "Build quality & energy", score: 6.5, note: "Build is finished; energy spec is to-code, not above." },
+        { label: "Liquidity & resale", score: 6.0, note: "Slower absorption than other Costa-del-Sol new-builds." },
+      ],
+    },
     completion: "Completed",
     completionYear: null,
     amenities: ["Pool", "Garden", "Parking", "Storage"],
@@ -299,6 +414,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true,
     tier: 3,
     isCurated: true,
+    review: {
+      score: 8.1,
+      verdict: "Recommended",
+      summary:
+        "Solid Porto entry with a verified developer and an appealing river-valley location. The amenity mix is appropriate (concierge, gym, roof terrace, EV charging) rather than show-off, and pricing sits cleanly with peer projects. A strong default choice for a Porto-area buyer.",
+      strengths: [
+        "Verified Tier-3 developer with three previous Porto schemes delivered",
+        "Douro Valley location offers premium views and walkable access to the city",
+        "Roof terrace and concierge tier expected of the price band",
+      ],
+      considerations: [
+        "Short-term letting NOT permitted — limits investor appeal",
+        "No spa or pool — depending on buyer profile, this may matter",
+      ],
+      criteria: [
+        { label: "Location", score: 8.5, note: "Porto with river-valley views; well-connected centrally." },
+        { label: "Price vs area", score: 8.0, note: "On-mark with comparable Porto new-builds." },
+        { label: "Developer track record", score: 9.0, note: "Three previous Porto schemes, all on-time delivery." },
+        { label: "Build quality & energy", score: 8.0, note: "Energy label A throughout; reasonable insulation spec." },
+        { label: "Liquidity & resale", score: 7.0, note: "No short-term-let permit narrows the resale audience." },
+      ],
+    },
     completion: "Q3 2027",
     completionYear: 2027,
     amenities: ["Roof terrace", "Concierge", "Gym", "EV charging"],
@@ -323,6 +460,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true,
     tier: 2,
     isCurated: false,
+    review: {
+      score: 7.6,
+      verdict: "Recommended",
+      summary:
+        "A solid Île-de-France development in a non-curated market for Invedi. The developer is verified at Tier 2 and the programme reflects mature Parisian expectations — concierge, parking, co-working, EV charging. Pricing is at the upper end of the segment but justifiable given the location.",
+      strengths: [
+        "Verified Tier-2 developer with multi-cycle Paris delivery record",
+        "Concierge + co-working programme aligns with the urban professional buyer",
+        "EV charging and storage allocations are sensibly spec'd",
+      ],
+      considerations: [
+        "Pricing at the upper end of comparable Île-de-France new-builds",
+        "France is not yet an Invedi focus market — fewer reference points",
+      ],
+      criteria: [
+        { label: "Location", score: 8.5, note: "Île-de-France: strong fundamentals, slow growth." },
+        { label: "Price vs area", score: 7.0, note: "Above the segment median by 5–8% on €/m²." },
+        { label: "Developer track record", score: 8.0, note: "Hexagone Promotion: clean public record." },
+        { label: "Build quality & energy", score: 8.0, note: "A-rated, to French RE-2020 spec." },
+        { label: "Liquidity & resale", score: 7.5, note: "Liquid Paris market; long absorption window." },
+      ],
+    },
     completion: "Q4 2027",
     completionYear: 2027,
     amenities: ["Concierge", "Parking", "Co-working", "Storage", "EV charging"],
@@ -347,6 +506,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true, // founder decision: only verified projects on the platform
     tier: 1,
     isCurated: false,
+    review: {
+      score: 6.8,
+      verdict: "Recommended with reservations",
+      summary:
+        "Berlin loft conversion at an attractive sticker price, but the developer is unverified at Tier 1 and the project's planning approvals are still being publicly confirmed. The amenity programme is functional rather than premium. Worth revisiting once Tier-2 status clears.",
+      strengths: [
+        "Competitive Berlin entry price for the loft segment",
+        "Co-working and gym programmes reflect Berlin's renter profile",
+        "EV charging and parking lift the long-term spec",
+      ],
+      considerations: [
+        "Developer identity and sales mandate not yet verified",
+        "Loft conversion rather than ground-up build — finishing quality varies",
+      ],
+      criteria: [
+        { label: "Location", score: 7.5, note: "Mitte-adjacent: strong renter profile, modest premium." },
+        { label: "Price vs area", score: 7.5, note: "Below Berlin median for the loft segment." },
+        { label: "Developer track record", score: 5.0, note: "Tier-1; no public delivery history to verify." },
+        { label: "Build quality & energy", score: 6.5, note: "Conversion-build; insulation upgrades partial." },
+        { label: "Liquidity & resale", score: 7.5, note: "Berlin loft segment is liquid; resale window short." },
+      ],
+    },
     completion: "Q2 2026",
     completionYear: 2026,
     amenities: ["Gym", "Co-working", "Parking", "EV charging"],
@@ -371,6 +552,28 @@ const SEEDS: ProjectSeed[] = [
     verified: true,
     tier: 3,
     isCurated: true,
+    review: {
+      score: 8.5,
+      verdict: "Recommended",
+      summary:
+        "Strong Athens entry from a verified Tier-3 developer. The pool-and-spa amenity profile is genuinely premium for the price range and the short-term-letting permission adds investor optionality. Athens fundamentals are improving and inventory at this price-and-spec tier remains thin.",
+      strengths: [
+        "Verified Tier-3 developer with clean Athens delivery record",
+        "Pool, spa, roof terrace + garden mix is premium for the price band",
+        "Short-term letting permitted — supports income-focused buyers",
+      ],
+      considerations: [
+        "Greek property tax framework is changing — stay informed pre-closing",
+        "Athens liquidity is rising but still thinner than NL/PT comparables",
+      ],
+      criteria: [
+        { label: "Location", score: 8.5, note: "Attica coast: strong tourism flow, walkable to the centre." },
+        { label: "Price vs area", score: 8.5, note: "Below regional median for the spec." },
+        { label: "Developer track record", score: 8.5, note: "Multiple successful Attica schemes." },
+        { label: "Build quality & energy", score: 8.0, note: "A-rated, with insulation above local code." },
+        { label: "Liquidity & resale", score: 8.5, note: "Short-term-let permission expands the buyer pool." },
+      ],
+    },
     completion: "Q1 2027",
     completionYear: 2027,
     amenities: ["Pool", "Spa", "Roof terrace", "Garden", "Parking"],
@@ -408,6 +611,7 @@ function buildProject(seed: ProjectSeed): Project {
     verified: seed.verified,
     tier: seed.tier,
     isCurated: seed.isCurated,
+    review: seed.review,
     trustNote: seed.verified
       ? "Placeholder trust note. Verified projects pass Invedi's listing checks (developer identity, planning permits, sales mandate). Exact criteria are TBD."
       : "Placeholder note. This project is not yet verified — developer consent and document checks are pending.",
