@@ -112,7 +112,9 @@ export function ProjectCard({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* Body */}
+      {/* Body — flex column. Grid items stretch by default, so every body fills the row
+          height and the View-project button (with mt-auto below) lands on a single baseline
+          across cards. */}
       <div className="flex flex-1 flex-col p-4">
         <Link href={`/projects/${project.slug}`} className="block">
           <h3 className="text-lg font-bold leading-snug text-text hover:underline">{project.name}</h3>
@@ -120,40 +122,54 @@ export function ProjectCard({ project }: { project: Project }) {
         <p className="mt-0.5 text-sm text-text-muted">{project.developer}</p>
         <LocationLine project={project} className="mt-1.5" />
 
-        {/* Price + completion */}
-        <div className="mt-3 flex items-baseline justify-between">
-          <p className="text-xl font-semibold text-primary-dark">
+        {/* Price + completion. The full no-abbreviation format ("€425.000 – €710.000") is
+            wide; without nowrap + a slightly smaller font it would wrap to two lines on
+            narrow grid columns (xl:grid-cols-4 ≈ 268px body) and shift the chips/button on
+            that one card. We keep it on ONE line by:
+              - text-base lg:text-lg (down from text-xl) — fits comfortably at 4-col width
+              - whitespace-nowrap on both children so neither side breaks mid-amount
+              - gap-x-2 so the completion tag never collides with the price visually */}
+        <div className="mt-3 flex items-baseline justify-between gap-x-2">
+          <p className="whitespace-nowrap text-base font-semibold text-primary-dark lg:text-lg">
             {formatPriceRange(project.priceMin, project.priceMax)}
           </p>
-          <p className="text-xs font-medium text-text-muted">{project.completion}</p>
+          <p className="whitespace-nowrap text-xs font-medium text-text-muted">{project.completion}</p>
         </div>
 
         {/* Spec chips. The units chip is replaced with the absolute availability label per
-            founder feedback (e.g. "4 of 6 units available"). Slightly smaller text since the
-            string is longer than the bare "6 units" it replaces; still legible. */}
+            founder feedback (e.g. "4 of 6 units available"). The block is laid out as a
+            DETERMINISTIC two-row grid — bed + area on row 1, the wider availability chip on
+            its own row 2 — so the chip height is identical on every card regardless of
+            whether availability would have wrapped in a flex-wrap row. */}
         {/* TODO(open-question): founder to confirm — absolute availability on cards + % sold
             on project page, or unify to one format. */}
         {(() => {
           const a = availabilityOf(project);
           return (
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
               <Chip icon="bed" label={`${formatRange(project.bedroomsMin, project.bedroomsMax, "")} bed`} />
               <Chip icon="area" label={`${formatRange(project.areaMin, project.areaMax, "")} m²`} />
-              <Chip icon="floors" label={`${a.available} of ${a.total} units available`} />
+              <div className="col-span-2">
+                <Chip icon="floors" label={`${a.available} of ${a.total} units available`} />
+              </div>
             </div>
           );
         })()}
 
-        {/* Footer CTA — no Reserve; opens the project */}
-        <Link
-          href={`/projects/${project.slug}`}
-          className="mt-4 flex h-11 items-center justify-center gap-1.5 rounded bg-primary text-base font-semibold text-white transition hover:bg-primary-hover"
-        >
-          View project
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-          </svg>
-        </Link>
+        {/* Footer CTA — wrapped in a `mt-auto pt-4` div: `mt-auto` pushes the button block
+            to the bottom of the body (so buttons land on a single baseline across cards),
+            `pt-4` keeps a consistent 16px visual gap between the chips and the button. */}
+        <div className="mt-auto pt-4">
+          <Link
+            href={`/projects/${project.slug}`}
+            className="flex h-11 items-center justify-center gap-1.5 rounded bg-primary text-base font-semibold text-white transition hover:bg-primary-hover"
+          >
+            View project
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </div>
   );
