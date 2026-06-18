@@ -24,13 +24,21 @@ export const GALLERY_IMAGES = [
   "/images/gallery5.jpg",
 ];
 
-/** Exterior / architectural shots — always shown first. */
+/** Exterior / architectural shots — always shown first.
+ *  Pool of 11 building photos (8 projects assigned randomly via `extHash`). With more images
+ *  than projects, adjacency duplicates in the grid are less likely than with the old 5-pool. */
 export const EXTERIOR_IMAGES = [
-  "/images/exterior-1.jpg",
-  "/images/exterior-2.jpg",
-  "/images/exterior-3.jpg",
-  "/images/exterior-4.jpg",
-  "/images/exterior-5.jpg",
+  "/images/buildings/building-01.jpg",
+  "/images/buildings/building-02.jpg",
+  "/images/buildings/building-03.jpg",
+  "/images/buildings/building-04.jpg",
+  "/images/buildings/building-05.jpg",
+  "/images/buildings/building-06.jpg",
+  "/images/buildings/building-07.jpg",
+  "/images/buildings/building-08.jpg",
+  "/images/buildings/building-09.jpg",
+  "/images/buildings/building-10.jpeg",
+  "/images/buildings/building-11.jpeg",
 ];
 
 /** Stable hash from a string so image selection is deterministic. */
