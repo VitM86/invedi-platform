@@ -6,6 +6,7 @@ import { WhyInvediV2 } from "@/components/wireframe/landing-v2/WhyInvediV2";
 import { MarketFocusV2 } from "@/components/wireframe/landing-v2/MarketFocusV2";
 import { HeroV3 } from "@/components/wireframe/landing-v3/HeroV3";
 import { AllProjectsGridV3 } from "@/components/wireframe/landing-v3/AllProjectsGridV3";
+import { SignUpBandV3 } from "@/components/wireframe/landing-v3/SignUpBandV3";
 
 /** Display serif scoped to /v3 (same approach as /v2). */
 const fraunces = Fraunces({
@@ -34,13 +35,12 @@ export const metadata: Metadata = {
 //   2. Full projects grid directly below the hero (NOT a 4-card featured selection).
 //   3. Country/region cards (MarketFocus) — entry points into Explore filtered by market.
 //   4. Why Invedi — gated behind SHOW_CURATED_INFRA (currently false, per founder).
-//   5. Footer.
+//   5. Sign-up band — three audience entry points (Buyer / Broker · Agent / Group of buyers).
+//      Re-introduced per founder; replaces the old removed UserTypeCtaV3 (different routing
+//      shape: now points at Invedi residences vs Bulk & fractional).
+//   6. Footer — with Instagram + LinkedIn icons under the tagline (showSocials flag).
 //
-// The audience CTA band (Buyer / Agent / Developer) was removed at this revision — the
-// founder felt it overcomplicated the page. UserTypeCtaV3 component still exists so it
-// can be reused later without rewriting it; it's just no longer rendered here.
-//
-// Background rhythm: hero (photo) → warm → white → footer.
+// Background rhythm: hero (photo) → cream → white → cream → white footer.
 export default function V3Landing() {
   return (
     <div className={`${fraunces.variable} min-h-screen bg-white`}>
@@ -49,8 +49,9 @@ export default function V3Landing() {
         <AllProjectsGridV3 />
         <MarketFocusV2 />
         {SHOW_CURATED_INFRA && <WhyInvediV2 />}
+        <SignUpBandV3 />
       </main>
-      <SiteFooter />
+      <SiteFooter showSocials />
     </div>
   );
 }
