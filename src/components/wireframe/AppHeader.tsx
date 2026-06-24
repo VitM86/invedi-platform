@@ -37,9 +37,14 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background">
       <div className="grid h-full grid-cols-3 items-center px-10 sm:px-12 lg:px-14">
-        {/* Left: nav links */}
+        {/* Left: nav links. Order: Explore (always visible) → Bulk & fractional (sm+) →
+            Developers (sm+) → About (md+). Bulk & fractional is the longest label; it stays
+            hidden under sm so the row doesn't overflow into the centered logo column. */}
         <div className="flex items-center gap-6 lg:gap-9">
           <NavLink href="/explore">Explore</NavLink>
+          <NavLink href="/bulk-fractional" className="hidden sm:inline-flex whitespace-nowrap">
+            Bulk &amp; fractional
+          </NavLink>
           <NavLink href="#" className="hidden sm:inline-flex">Developers</NavLink>
           <NavLink href="#" className="hidden md:inline-flex">About</NavLink>
         </div>
