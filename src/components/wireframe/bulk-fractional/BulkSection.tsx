@@ -1,23 +1,22 @@
-// Bulk landing — built in part 2.
+// Bulk landing — composition of part 2 sub-components.
 //
-// Shell only at this stage: a labelled placeholder so the toggle has something to render
-// against. Real content (hero / discount tiers / multi-unit cart logic / sample developer
-// projects with bulk pricing) lands in a follow-up build. The component intentionally has
-// no props yet so part 2 can shape its own API freely without a migration step.
+// Sub-components live alongside this file so part 3 (real filter wiring) can swap
+// BulkFilterBar without touching the rest of the layout, and a later real-data pass can
+// replace bulkMockData without touching presentation. Section spacing rhythm: large gaps
+// between bands so the page reads as distinct content blocks rather than a wall.
+
+import { BulkIntroBanner } from "./BulkIntroBanner";
+import { BulkStatsRow } from "./BulkStatsRow";
+import { BulkFilterBar } from "./BulkFilterBar";
+import { BulkMarketsGrid } from "./BulkMarketsGrid";
 
 export function BulkSection() {
   return (
-    <section className="rounded-2xl border border-dashed border-border bg-surface px-6 py-16 text-center sm:py-24">
-      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-text-muted">
-        Placeholder
-      </p>
-      <h2 className="mt-3 text-xl font-semibold text-text sm:text-2xl">
-        Bulk discounts content
-      </h2>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-text-muted">
-        Multi-unit reservation flows, discount tiers, and bulk-qualifying inventory land here
-        in a follow-up build.
-      </p>
-    </section>
+    <div className="space-y-10 lg:space-y-14">
+      <BulkIntroBanner />
+      <BulkStatsRow />
+      <BulkFilterBar />
+      <BulkMarketsGrid />
+    </div>
   );
 }
