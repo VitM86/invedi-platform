@@ -1,12 +1,21 @@
+"use client";
+
 /**
  * RegionOverview — market-context layer for the project page (inserted between Location and
  * Units). Left: a LIVE light Mapbox map (RegionMapLive) with the project + same-country
  * neighbours + reference pills, and an Expand → dark bird-view. Right: a comparison table of
- * nearby new-builds. Server component; the map column is a client island.
+ * nearby new-builds.
+ *
+ * Now a client component (was a server component) so the ComparisonTable can read
+ * useUnlock() — the gated rows (project + first comparable visible, rest blurred behind
+ * a signup prompt) share the same UnlockProvider flag as the rest of the platform's
+ * signup-style gates. Data prep is pure mock-data lookup, no SSR-only APIs needed.
  */
 
 import { getProject, projects, referencePointsFor, type CountryCode, type Project } from "@/lib/mock-data";
 import { RegionMapLive } from "./RegionMapLive";
+import { useUnlock } from "../UnlockProvider";
+import { SignupCard } from "../SignupBlurGate";
 
 // Rough geographic ordering used only to top up the comparison set when a country has <3
 // other projects in the mock data.
@@ -50,11 +59,18 @@ function comparisonSet(current: Project): Project[] {
 }
 
 function ComparisonTable({ current, rows }: { current: Project; rows: Project[] }) {
-  // TODO(open-question): should verified rows be emphasised beyond a badge (e.g. row tint or
-  // an icon on the project name)? Currently: badge only.
+  const { unlocked } = useUnlock();
+  // First TEASER_VISIBLE rows are always public: the project's own row + the first
+  // comparable. Everything after is gated behind the signup overlay until the session
+  // is unlocked — Crunchbase / PitchBook style "show enough to demonstrate value".
+  const TEASER_VISIBLE = 2;
+  const gateFrom = unlocked ? rows.length : TEASER_VISIBLE;
+
   return (
     <div>
-      <div className="overflow-x-auto rounded border border-border">
+      {/* `relative` lets the absolute overlay sit on the lower (blurred) rows. `overflow-
+          hidden` lets the gradient/card respect the rounded corners cleanly. */}
+      <div className="relative overflow-hidden rounded border border-border">
         <table className="w-full min-w-[380px] border-collapse text-[13px]">
           <thead>
             <tr className="bg-surface text-left text-[11px] font-semibold uppercase tracking-wide text-text-muted">
@@ -67,12 +83,16 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => {
+            {rows.map((p, i) => {
               const isCurrent = p.slug === current.slug;
+              const isGated = i >= gateFrom;
               return (
                 <tr
                   key={p.slug}
-                  className={`border-t border-border ${isCurrent ? "bg-surface-tint" : ""}`}
+                  aria-hidden={isGated || undefined}
+                  className={`border-t border-border ${isCurrent ? "bg-surface-tint" : ""} ${
+                    isGated ? "pointer-events-none select-none [filter:blur(5px)]" : ""
+                  }`}
                 >
                   <td className={`px-2.5 py-3 ${isCurrent ? "border-l-2 border-primary" : ""}`}>
                     <div className="font-semibold text-text">{p.name}</div>
@@ -110,6 +130,20 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
             })}
           </tbody>
         </table>
+
+        {/* Signup overlay — covers the lower (blurred) rows with a fade-in gradient and the
+            signup card. Positioned at the bottom so the visible rows remain legible and the
+            card sits naturally in the gated zone. TODO(copy): founder to refine prompt. */}
+        {!unlocked && rows.length > TEASER_VISIBLE && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center justify-end bg-gradient-to-t from-background via-background/90 to-transparent px-3 pb-4 pt-20">
+            <div className="pointer-events-auto w-full max-w-sm">
+              <SignupCard
+                prompt="Sign up to see the full comparison"
+                sub={`See all ${rows.length} projects in this market.`}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <p className="mt-2 text-xs italic text-text-muted">
         Comparison based on listed asking prices. Includes both verified and unverified projects

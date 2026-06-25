@@ -15,6 +15,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project, ProjectReview, ReviewVerdict } from "@/lib/mock-data";
 import { StarScore } from "./StarScore";
+import { SignupBlurGate } from "../SignupBlurGate";
 
 type VerdictStyle = {
   bg: string;
@@ -50,8 +51,17 @@ export function EditorialNote({ project }: { project: Project }) {
     <section className="rounded border border-border bg-background">
       <Header />
       <ScoreSummary review={r} />
-      <PointsRow review={r} />
-      <Criteria review={r} />
+      {/* Strengths / Points-to-consider / Criteria breakdown are gated behind the shared
+          signup gate: section heading + ScoreSummary stay public as the teaser, the deeper
+          analysis blurs behind a sign-up prompt until the session is unlocked. Reuses the
+          UnlockProvider flag so one sign-up everywhere unlocks every gate. */}
+      <SignupBlurGate
+        prompt="Sign up to see the full Invedi score analysis"
+        sub="Strengths, points to consider, and the per-criterion breakdown."
+      >
+        <PointsRow review={r} />
+        <Criteria review={r} />
+      </SignupBlurGate>
     </section>
   );
 }

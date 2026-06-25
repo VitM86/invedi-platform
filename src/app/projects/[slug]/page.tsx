@@ -84,17 +84,12 @@ export default async function ProjectPage({
           </div>
         </div>
 
-        {/* Compact at-a-glance assessment — stars + score + short verdict. Lives ABOVE the
-            two-column grid so it reads first on every viewport, and so the right-rail
-            Interested card naturally sits "just under" it on first paint per the founder's
-            latest direction. The full review (strengths, considerations, criteria
-            breakdown) still lives further down inside EditorialNote. */}
-        <ProjectScoreSummary project={project} />
-
         {/* Two-column body. Right rail is fixed-width 300px so the main content column gets
-            visibly more room than the previous 2/3 split — per the latest founder session,
-            content gets priority over the CTA rail. */}
-        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+            visibly more room than the previous 2/3 split — per the founder session,
+            content gets priority over the CTA rail. The compact score summary now lives
+            INSIDE the right column above Interested (right rail reads: score → Interested);
+            the full-width band that briefly sat at the top of the page has been removed. */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="space-y-10">
             <ProjectGallery
               slug={project.slug}
@@ -160,11 +155,12 @@ export default async function ProjectPage({
             <TrustBlock project={project} />
           </div>
 
-          {/* Sticky CTA aside. Sits at the top of the right rail; since the score block
-              now lives ABOVE the whole grid, Interested naturally reads "just under" it
-              on first paint. */}
+          {/* Sticky right rail. Top-to-bottom order: compact score summary → Interested
+              ("Interested in this project") block. Both sticky together so they travel as
+              one CTA cluster while the user scrolls the main column. */}
           <aside>
             <div className="space-y-4 lg:sticky lg:top-20">
+              <ProjectScoreSummary project={project} />
               <ProjectActions context={project.name} />
             </div>
           </aside>
@@ -187,38 +183,31 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-/** Compact at-a-glance review block — top of the page above the two-column grid. Just the
- *  visual cue (stars + numeric score + short verdict + first line of the summary). Does NOT
- *  replace EditorialNote: that stays below with the full strengths / considerations /
- *  criteria breakdown. The split lets a user see "this has been assessed, here's the
- *  rating" before they decide whether to scroll down to the full review. */
+/** Compact at-a-glance review block — top of the right rail, above the Interested card.
+ *  Public teaser only: stars + numeric score + verdict pill + first sentence of the summary.
+ *  The full review (strengths / considerations / criteria breakdown) lives lower on the
+ *  page inside EditorialNote and is GATED behind signup — this teaser is what convinces
+ *  the user there's an assessment worth unlocking. */
 function ProjectScoreSummary({ project }: { project: Project }) {
   const r = project.review;
   /** First sentence of the summary as the short verdict caption. The full multi-sentence
-   *  summary appears inside EditorialNote further down — duplicating just the headline
-   *  keeps the at-a-glance block readable without crowding it. */
+   *  summary lives inside EditorialNote further down (behind the signup gate). */
   const headline = r.summary.split(/(?<=[.!?])\s+/, 1)[0] ?? r.summary;
   return (
     <section
       aria-label="Project assessment summary"
-      className="mb-8 rounded border border-border bg-surface p-5 sm:p-6"
+      className="rounded border border-border bg-surface p-4"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">
-            Invedi score
-          </p>
-          <div className="mt-1.5">
-            <StarScore score={r.score} size="md" />
-          </div>
-        </div>
-        <div className="sm:max-w-[60%]">
-          <p className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark">
-            {r.verdict}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-text">{headline}</p>
-        </div>
+      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">
+        Invedi score
+      </p>
+      <div className="mt-2">
+        <StarScore score={r.score} size="md" />
       </div>
+      <p className="mt-3 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark">
+        {r.verdict}
+      </p>
+      <p className="mt-2.5 text-[13px] leading-snug text-text">{headline}</p>
     </section>
   );
 }
