@@ -11,7 +11,20 @@ import type { Project, Unit, UnitStatus } from "@/lib/mock-data";
 import { formatPriceFull } from "@/lib/mock-data";
 import { ReserveButton } from "../reserve/ReserveButton";
 
-const GRID = "sm:grid-cols-[1.4fr_1fr_0.7fr_0.9fr_1.1fr_auto]";
+/** Shared column template — used by both the header row and every body row so cells
+ *  always land directly under their column headers regardless of what's in the Status /
+ *  Action column.
+ *
+ *  The trailing column is FIXED at 180px (not `auto`). Each row is its own CSS grid
+ *  container, so leaving the last track as `auto` made each row size it independently
+ *  from its own content — Reserve-button rows ended up wider, Reserved/Sold rows
+ *  narrower, and the `fr` columns to the left distributed the remainder differently,
+ *  pushing Type / Floor / Area / Price off-grid between rows.
+ *
+ *  180px is sized to comfortably fit the widest combination (StatusBadge + gap-3 +
+ *  ReserveButton at size="sm"). Reserved / Sold rows show StatusBadge + chevron in the
+ *  same 180px and stay right-aligned via justify-end. */
+const GRID = "sm:grid-cols-[1.4fr_1fr_0.7fr_0.9fr_1.1fr_180px]";
 
 const STATUS_STYLES: Record<UnitStatus, { label: string; className: string }> = {
   available: { label: "Available", className: "bg-surface-tint text-primary-dark" },
