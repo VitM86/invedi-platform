@@ -27,9 +27,11 @@ export function BulkIntroBanner() {
           developers.
         </p>
         <div className="mt-7">
-          {/* TODO(link): wire to onboarding / sign-up flow once it exists. */}
+          {/* Scrolls to the inline RegisterInterestForm at the bottom of BulkSection.
+              The form has id="register-interest". TODO(link): once a real sign-up /
+              onboarding flow exists, point this at it instead. */}
           <Link
-            href="#"
+            href="#register-interest"
             className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
           >
             Access platform

@@ -26,9 +26,11 @@ export function FractionalIntroBanner() {
           legal title, exits via a curated secondary marketplace.
         </p>
         <div className="mt-7">
-          {/* TODO(link): wire to fractional onboarding / sign-up flow once it exists. */}
+          {/* Scrolls to the inline RegisterInterestForm at the bottom of FractionalSection.
+              Form has id="register-interest". TODO(link): once a real fractional sign-up /
+              onboarding flow exists, point this at it instead. */}
           <Link
-            href="#"
+            href="#register-interest"
             className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
           >
             Access platform
