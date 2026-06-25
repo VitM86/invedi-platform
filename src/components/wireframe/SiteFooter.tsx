@@ -98,7 +98,7 @@ export function SiteFooter({ showSocials = false }: { showSocials?: boolean } = 
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-text-muted transition-colors hover:border-text hover:text-text"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-sm transition-colors hover:bg-primary-hover"
                   >
                     <Icon />
                   </a>

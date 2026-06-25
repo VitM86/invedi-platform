@@ -37,15 +37,16 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background">
       <div className="grid h-full grid-cols-3 items-center px-10 sm:px-12 lg:px-14">
-        {/* Left: nav links. Order: Explore (always visible) → Bulk & fractional (sm+) →
-            Developers (sm+) → About (md+). Bulk & fractional is the longest label; it stays
-            hidden under sm so the row doesn't overflow into the centered logo column. */}
+        {/* Left: nav links. Order: Residences (always visible) → Bulk & fractional (sm+) →
+            About (md+). "Residences" is the renamed Explore entry per the latest founder
+            session — same destination, new label.
+            TODO(open-question): "Residences" vs "All Projects" label, and whether a
+            separate Explore entry is still needed — founder to confirm. */}
         <div className="flex items-center gap-6 lg:gap-9">
-          <NavLink href="/explore">Explore</NavLink>
+          <NavLink href="/explore">Residences</NavLink>
           <NavLink href="/bulk-fractional" className="hidden sm:inline-flex whitespace-nowrap">
             Bulk &amp; fractional
           </NavLink>
-          <NavLink href="#" className="hidden sm:inline-flex">Developers</NavLink>
           <NavLink href="#" className="hidden md:inline-flex">About</NavLink>
         </div>
 
@@ -60,14 +61,21 @@ export function AppHeader() {
           </Link>
         </div>
 
-        {/* Right: Sign in pill — teal text on a thin-bordered white pill, mirroring the
-            /v3 hero header's "white pill, teal text" rhythm. */}
-        <div className="flex items-center justify-end">
+        {/* Right: Login (secondary text-link) + Sign up (primary filled pill). Both point at
+            placeholder routes; real auth is out of scope. TODO(link): once the real
+            login + sign-up flow exists, point these there. */}
+        <div className="flex items-center justify-end gap-3">
           <Link
             href="#"
-            className="inline-flex h-10 items-center justify-center rounded-full border border-border bg-white px-5 text-[13px] font-semibold text-primary-dark transition hover:bg-surface"
+            className="hidden text-[13px] font-semibold text-text-muted transition-colors hover:text-text sm:inline-flex"
           >
-            Sign in
+            Login
+          </Link>
+          <Link
+            href="#"
+            className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-primary-hover"
+          >
+            Sign up
           </Link>
         </div>
       </div>

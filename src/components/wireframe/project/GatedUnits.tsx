@@ -4,11 +4,15 @@
  * GatedUnits — the prototype units gate (Crunchbase / PitchBook style: public preview, deeper
  * value gated). Renders the same units table as UnitList, but:
  *   - the first TEASER units are always shown in full (public);
- *   - the rest are present-but-blurred behind an unlock overlay until the session is unlocked.
+ *   - the rest are present-but-blurred behind a signup overlay until the session is unlocked.
  *
- * Unlock is per-session and shared across project pages via UnlockProvider — once unlocked here,
- * every project's units stay unlocked while browsing. NOT auth: any email (or the "sign in" link)
- * unlocks; nothing is validated, captured, or sent anywhere.
+ * Unlock is per-session and shared across project pages via UnlockProvider — sign up here
+ * and every project's units stay unlocked while browsing.
+ *
+ * // DEMO: mocked signup gate, no real auth. Reframed as a signup ask ("Sign up to see all
+ * units, prices and availability") per the founder's latest direction, but the mechanic
+ * underneath is unchanged — any email submission, or the "I already have an account" path,
+ * flips the same UnlockProvider flag.
  */
 
 import { useState } from "react";
@@ -101,11 +105,12 @@ function UnlockCard({
         </svg>
       </div>
 
+      {/* TODO(copy): founder to refine signup ask + reassurance line. */}
       <p className="mt-3 text-base font-semibold text-text">
-        Sign in to see all {total} units, prices and availability
+        Sign up to see all {total} units, prices and availability
       </p>
       <p className="mt-1 text-sm text-text-muted">
-        You’re viewing a preview. Unlock the full unit list for free.
+        You’re viewing a preview. Sign up to unlock the full unit list — free, no spam.
       </p>
 
       <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -122,22 +127,18 @@ function UnlockCard({
           type="submit"
           className="h-11 flex-none rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover"
         >
-          Unlock units
+          Sign up to unlock
         </button>
       </form>
 
-      <p className="mt-2.5 text-xs text-text-muted">
-        No spam. We’ll only use this to give you access.
-      </p>
-
       <p className="mt-3 text-sm text-text-muted">
-        Already have access?{" "}
+        Already have an account?{" "}
         <button
           type="button"
           onClick={() => onUnlock()}
           className="font-semibold text-accent underline-offset-2 hover:underline"
         >
-          Sign in
+          Log in
         </button>
       </p>
     </div>

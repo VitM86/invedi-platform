@@ -33,10 +33,14 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
         }}
       >
         <div className="grid h-full grid-cols-3 items-center px-5 lg:px-8">
-          {/* Left: nav links */}
+          {/* Left: nav links — Residences (renamed from Explore) + Bulk & fractional + About.
+              Developers is intentionally dropped per the latest founder session. Sibling-
+              shape to AppHeader so the swap on scroll feels continuous. */}
           <div className="flex items-center gap-6 lg:gap-9">
-            <NavLink href="/explore">Explore</NavLink>
-            <NavLink href="#" className="hidden sm:inline-flex">Developers</NavLink>
+            <NavLink href="/explore">Residences</NavLink>
+            <NavLink href="/bulk-fractional" className="hidden sm:inline-flex whitespace-nowrap">
+              Bulk &amp; fractional
+            </NavLink>
             <NavLink href="#" className="hidden md:inline-flex">About</NavLink>
           </div>
 
@@ -53,13 +57,20 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
             </Link>
           </div>
 
-          {/* Right: Sign in — white pill with teal text */}
-          <div className="flex items-center justify-end">
+          {/* Right: Login (text link on glass) + Sign up (white pill with teal text). Both
+              point at placeholder routes — TODO(link) once the real auth flow lands. */}
+          <div className="flex items-center justify-end gap-3">
+            <Link
+              href="#"
+              className="hidden text-[13px] font-semibold text-white/95 transition-colors hover:text-white sm:inline-flex"
+            >
+              Login
+            </Link>
             <Link
               href="#"
               className="inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-[13px] font-semibold text-primary-dark shadow-sm transition hover:bg-white/95"
             >
-              Sign in
+              Sign up
             </Link>
           </div>
         </div>

@@ -14,6 +14,7 @@ import { ProjectGallery } from "@/components/wireframe/project/ProjectGallery";
 import { ProjectActions } from "@/components/wireframe/project/ProjectActions";
 import { RegionOverview } from "@/components/wireframe/project/RegionOverview";
 import { EditorialNote } from "@/components/wireframe/project/EditorialNote";
+import { StarScore } from "@/components/wireframe/project/StarScore";
 import { SalesStatus } from "@/components/wireframe/project/SalesStatus";
 import { GatedUnits } from "@/components/wireframe/project/GatedUnits";
 import { LightProjectMap } from "@/components/wireframe/project/LightProjectMap";
@@ -83,9 +84,18 @@ export default async function ProjectPage({
           </div>
         </div>
 
-        {/* Two-column body */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="space-y-10 lg:col-span-2">
+        {/* Compact at-a-glance assessment — stars + score + short verdict. Lives ABOVE the
+            two-column grid so it reads first on every viewport, and so the right-rail
+            Interested card naturally sits "just under" it on first paint per the founder's
+            latest direction. The full review (strengths, considerations, criteria
+            breakdown) still lives further down inside EditorialNote. */}
+        <ProjectScoreSummary project={project} />
+
+        {/* Two-column body. Right rail is fixed-width 300px so the main content column gets
+            visibly more room than the previous 2/3 split — per the latest founder session,
+            content gets priority over the CTA rail. */}
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="space-y-10">
             <ProjectGallery
               slug={project.slug}
               name={project.name}
@@ -150,8 +160,10 @@ export default async function ProjectPage({
             <TrustBlock project={project} />
           </div>
 
-          {/* Sticky CTA aside */}
-          <aside className="lg:col-span-1">
+          {/* Sticky CTA aside. Sits at the top of the right rail; since the score block
+              now lives ABOVE the whole grid, Interested naturally reads "just under" it
+              on first paint. */}
+          <aside>
             <div className="space-y-4 lg:sticky lg:top-20">
               <ProjectActions context={project.name} />
             </div>
@@ -171,6 +183,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <section>
       <h2 className="mb-4 text-xl font-semibold text-text">{title}</h2>
       {children}
+    </section>
+  );
+}
+
+/** Compact at-a-glance review block — top of the page above the two-column grid. Just the
+ *  visual cue (stars + numeric score + short verdict + first line of the summary). Does NOT
+ *  replace EditorialNote: that stays below with the full strengths / considerations /
+ *  criteria breakdown. The split lets a user see "this has been assessed, here's the
+ *  rating" before they decide whether to scroll down to the full review. */
+function ProjectScoreSummary({ project }: { project: Project }) {
+  const r = project.review;
+  /** First sentence of the summary as the short verdict caption. The full multi-sentence
+   *  summary appears inside EditorialNote further down — duplicating just the headline
+   *  keeps the at-a-glance block readable without crowding it. */
+  const headline = r.summary.split(/(?<=[.!?])\s+/, 1)[0] ?? r.summary;
+  return (
+    <section
+      aria-label="Project assessment summary"
+      className="mb-8 rounded border border-border bg-surface p-5 sm:p-6"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">
+            Invedi score
+          </p>
+          <div className="mt-1.5">
+            <StarScore score={r.score} size="md" />
+          </div>
+        </div>
+        <div className="sm:max-w-[60%]">
+          <p className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark">
+            {r.verdict}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-text">{headline}</p>
+        </div>
+      </div>
     </section>
   );
 }
