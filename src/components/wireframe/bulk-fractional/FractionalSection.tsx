@@ -1,23 +1,40 @@
-// Fractional landing — built in part 4.
-//
-// Shell only at this stage: a labelled placeholder so the toggle has something to render
-// against. Real content (hero / how fractional works / share split UI / sample fractionalised
-// projects) lands in a follow-up build. No props yet so the part-4 author can shape the API
-// without needing to break anything here first.
+"use client";
+
+/**
+ * FractionalSection — Fractional landing composition + selection-state owner.
+ *
+ * Mirrors BulkSection's shape (intro banner → content blocks) so the two sub-sections
+ * read as siblings. Selection state for both grids lives here so part 5 can lift it into
+ * a real filter-params type and hand it to a deal-list component.
+ *
+ * NOTE: the deliberate Bulk/Fractional mismatch — Bulk roster is CITIES, Fractional roster
+ * is COUNTRIES — is flagged in fractionalMockData.ts and on the founder backlog as an
+ * open question.
+ *
+ * // TODO: wire category + country selection to fractional params in part 5.
+ */
+
+import { useState } from "react";
+import { FractionalIntroBanner } from "./FractionalIntroBanner";
+import { FractionalCategoryGrid } from "./FractionalCategoryGrid";
+import { FractionalCountryGrid } from "./FractionalCountryGrid";
+
+function useMultiToggle() {
+  const [selected, setSelected] = useState<string[]>([]);
+  const toggle = (id: string) =>
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  return [selected, toggle] as const;
+}
 
 export function FractionalSection() {
+  const [categories, toggleCategory] = useMultiToggle();
+  const [countries, toggleCountry] = useMultiToggle();
+
   return (
-    <section className="rounded-2xl border border-dashed border-border bg-surface px-6 py-16 text-center sm:py-24">
-      <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-text-muted">
-        Placeholder
-      </p>
-      <h2 className="mt-3 text-xl font-semibold text-text sm:text-2xl">
-        Fractional ownership content
-      </h2>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-text-muted">
-        Share-split explainer, fractionalised inventory, and group-onboarding flows land here
-        in a follow-up build.
-      </p>
-    </section>
+    <div className="space-y-10 lg:space-y-14">
+      <FractionalIntroBanner />
+      <FractionalCategoryGrid selected={categories} onToggle={toggleCategory} />
+      <FractionalCountryGrid selected={countries} onToggle={toggleCountry} />
+    </div>
   );
 }
