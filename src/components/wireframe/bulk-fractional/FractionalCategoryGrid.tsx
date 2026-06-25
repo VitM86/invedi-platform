@@ -74,12 +74,8 @@ export function FractionalCategoryGrid({
 }) {
   return (
     <section>
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6">
         <h2 className="text-xl font-semibold text-text sm:text-2xl">Asset category</h2>
-        <p className="text-xs text-text-muted">
-          {/* TODO: wire category selection to fractional params in part 5. */}
-          Captured for filtering — wires in a later pass.
-        </p>
       </div>
 
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

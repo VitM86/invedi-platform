@@ -1,40 +1,58 @@
 "use client";
 
 /**
- * FractionalSection — Fractional landing composition + selection-state owner.
+ * FractionalSection — Fractional landing composition + filter-state owner.
  *
- * Mirrors BulkSection's shape (intro banner → content blocks) so the two sub-sections
- * read as siblings. Selection state for both grids lives here so part 5 can lift it into
- * a real filter-params type and hand it to a deal-list component.
+ * Owns a single FractionalFilters object and runs FRACTIONAL_LISTINGS through the pure
+ * pipeline (applyFractionalFilters). Category + country selections feed straight into
+ * filters.categoryIds and filters.countryIds, and the params block (max volume,
+ * flexibility, type, ranges) refines further.
  *
- * NOTE: the deliberate Bulk/Fractional mismatch — Bulk roster is CITIES, Fractional roster
- * is COUNTRIES — is flagged in fractionalMockData.ts and on the founder backlog as an
- * open question.
+ * Composition order: intro banner → category grid → country grid → params block → deals
+ * list. Reads top-down: pick what you're looking for, then refine the constraints, then
+ * see results.
  *
- * // TODO: wire category + country selection to fractional params in part 5.
+ * BulkSection's structure inspired this orchestrator (single filter object owned at the
+ * section root, sub-components are controlled). Kept locally typed rather than sharing a
+ * generic so the two sub-sections evolve independently.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FractionalIntroBanner } from "./FractionalIntroBanner";
 import { FractionalCategoryGrid } from "./FractionalCategoryGrid";
 import { FractionalCountryGrid } from "./FractionalCountryGrid";
-
-function useMultiToggle() {
-  const [selected, setSelected] = useState<string[]>([]);
-  const toggle = (id: string) =>
-    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  return [selected, toggle] as const;
-}
+import { FractionalParamsBlock } from "./FractionalParamsBlock";
+import { FractionalDealsList } from "./FractionalDealsList";
+import {
+  DEFAULT_FRACTIONAL_FILTERS,
+  applyFractionalFilters,
+  type FractionalFilters,
+} from "./fractionalFilters";
 
 export function FractionalSection() {
-  const [categories, toggleCategory] = useMultiToggle();
-  const [countries, toggleCountry] = useMultiToggle();
+  const [filters, setFilters] = useState<FractionalFilters>(DEFAULT_FRACTIONAL_FILTERS);
+
+  const toggleId = (key: "categoryIds" | "countryIds", id: string) =>
+    setFilters((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(id) ? prev[key].filter((x) => x !== id) : [...prev[key], id],
+    }));
+
+  const listings = useMemo(() => applyFractionalFilters(filters), [filters]);
 
   return (
     <div className="space-y-10 lg:space-y-14">
       <FractionalIntroBanner />
-      <FractionalCategoryGrid selected={categories} onToggle={toggleCategory} />
-      <FractionalCountryGrid selected={countries} onToggle={toggleCountry} />
+      <FractionalCategoryGrid
+        selected={filters.categoryIds}
+        onToggle={(id) => toggleId("categoryIds", id)}
+      />
+      <FractionalCountryGrid
+        selected={filters.countryIds}
+        onToggle={(id) => toggleId("countryIds", id)}
+      />
+      <FractionalParamsBlock filters={filters} onChange={setFilters} />
+      <FractionalDealsList listings={listings} />
     </div>
   );
 }
