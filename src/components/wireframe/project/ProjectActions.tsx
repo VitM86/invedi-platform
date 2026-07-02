@@ -19,7 +19,7 @@ import { SalesSheet, type SalesIntent } from "../SalesSheet";
 import { useUnlock } from "../UnlockProvider";
 
 export function ProjectActions({ context }: { context: string }) {
-  const { unlocked, unlock } = useUnlock();
+  const { unlocked, requestUnlock } = useUnlock();
   const [open, setOpen] = useState(false);
   const [intent, setIntent] = useState<SalesIntent>("advisor");
 
@@ -36,22 +36,15 @@ export function ProjectActions({ context }: { context: string }) {
         <p className="mt-1 text-sm text-text-muted">
           Sign up to talk to an Invedi advisor and access the sales pack.
         </p>
+        {/* Opens the shared qualification form (UnlockProvider). */}
         <button
-          onClick={() => unlock()}
+          onClick={requestUnlock}
           className="mt-4 flex h-11 w-full items-center justify-center rounded bg-primary text-sm font-semibold text-white transition hover:bg-primary-hover"
         >
           Sign up to unlock
         </button>
-        <p className="mt-2 text-xs text-text-muted">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => unlock()}
-            className="font-semibold text-accent underline-offset-2 hover:underline"
-          >
-            Log in
-          </button>
-        </p>
+        {/* TODO(copy) */}
+        <p className="mt-2 text-xs text-text-muted">A few quick questions · ~30 seconds.</p>
       </div>
     );
   }

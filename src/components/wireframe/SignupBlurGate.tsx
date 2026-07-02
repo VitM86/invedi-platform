@@ -17,7 +17,6 @@
  * shared useUnlock hook — see RegionOverview's ComparisonTable for that pattern.
  */
 
-import { useState } from "react";
 import { useUnlock } from "./UnlockProvider";
 
 export function SignupBlurGate({
@@ -63,14 +62,7 @@ export function SignupCard({
   prompt: string;
   sub?: string;
 }) {
-  const { unlock } = useUnlock();
-  const [email, setEmail] = useState("");
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Prototype: any non-empty email unlocks. No validation / capture.
-    if (email.trim()) unlock(email.trim());
-  };
+  const { requestUnlock } = useUnlock();
 
   return (
     <div className="w-full max-w-md rounded-xl border border-border bg-background p-5 text-center shadow-xl sm:p-6">
@@ -84,34 +76,17 @@ export function SignupCard({
       <p className="mt-3 text-base font-semibold text-text">{prompt}</p>
       {sub && <p className="mt-1 text-sm text-text-muted">{sub}</p>}
 
-      <form onSubmit={submit} className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@email.com"
-          aria-label="Email address"
-          className="h-11 w-full flex-1 rounded-lg border border-border bg-background px-3.5 text-sm text-text outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30"
-        />
-        <button
-          type="submit"
-          className="h-11 flex-none rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover"
-        >
-          Sign up to unlock
-        </button>
-      </form>
-
-      <p className="mt-3 text-sm text-text-muted">
-        Already have an account?{" "}
-        <button
-          type="button"
-          onClick={() => unlock()}
-          className="font-semibold text-accent underline-offset-2 hover:underline"
-        >
-          Log in
-        </button>
-      </p>
+      {/* Opens the shared qualification form (UnlockProvider). No inline email / login bypass —
+          qualification is required, so completing the questions is the only way to unlock. */}
+      <button
+        type="button"
+        onClick={requestUnlock}
+        className="mt-4 h-11 w-full rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+      >
+        Sign up to unlock
+      </button>
+      {/* TODO(copy) */}
+      <p className="mt-3 text-xs text-text-muted">A few quick questions · ~30 seconds · no spam.</p>
     </div>
   );
 }
