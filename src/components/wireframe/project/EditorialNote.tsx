@@ -14,7 +14,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Project, ProjectReview, ReviewVerdict } from "@/lib/mock-data";
-import { StarScore } from "./StarScore";
+import { scoreToStars } from "@/lib/mock-data";
+import { InvediStars } from "./StarScore";
 import { SignupBlurGate } from "../SignupBlurGate";
 
 type VerdictStyle = {
@@ -57,8 +58,9 @@ export function EditorialNote({ project }: { project: Project }) {
           UnlockProvider flag so one sign-up everywhere unlocks every gate. */}
       <SignupBlurGate
         prompt="Sign up to see the full Invedi score analysis"
-        sub="Strengths, points to consider, and the per-criterion breakdown."
+        sub="The numeric score, strengths, points to consider, and the per-criterion breakdown."
       >
+        <GatedScore review={r} />
         <PointsRow review={r} />
         <Criteria review={r} />
       </SignupBlurGate>
@@ -146,15 +148,18 @@ function HowWeAssessPopover() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Big score + verdict + summary                                       */
+/* Star rating + verdict + summary (public teaser)                     */
 /* ------------------------------------------------------------------ */
 
 function ScoreSummary({ review }: { review: ProjectReview }) {
   const v = VERDICT_STYLE[review.verdict];
+  const stars = scoreToStars(review.score);
   return (
     <div className="grid grid-cols-1 gap-5 px-5 py-5 sm:px-7 sm:py-6 lg:grid-cols-[auto_1fr] lg:gap-10">
       <div className="flex flex-col items-start gap-3">
-        <StarScore score={review.score} size="lg" />
+        {/* Public rating: stars only. The numeric score is revealed in the gated block
+            below (GatedScore) and nowhere else. Sub-6.5 projects show no stars. */}
+        {stars >= 1 && <InvediStars stars={stars} size="lg" />}
         <span
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] font-semibold ${v.bg} ${v.text} ${v.border}`}
         >
@@ -163,6 +168,30 @@ function ScoreSummary({ review }: { review: ProjectReview }) {
         </span>
       </div>
       <p className="max-w-3xl text-[15px] leading-relaxed text-text">{review.summary}</p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Numeric score (gated) — the ONLY place the number appears           */
+/* ------------------------------------------------------------------ */
+
+/** Sits at the top of the gated full analysis, next to the star rating, so the unlocked view
+ *  reads as a self-contained assessment: stars → number → strengths → criteria. This numeric
+ *  score is intentionally the single public-reachable place the number is shown (behind signup);
+ *  every other surface shows stars only. */
+function GatedScore({ review }: { review: ProjectReview }) {
+  const stars = scoreToStars(review.score);
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-border bg-surface/40 px-5 py-5 sm:px-7">
+      <p className="w-full text-[11px] font-bold uppercase tracking-[0.18em] text-text-muted">
+        Overall score
+      </p>
+      {stars >= 1 && <InvediStars stars={stars} size="md" />}
+      <span className="inline-flex items-baseline gap-1.5">
+        <span className="text-3xl font-bold tabular-nums text-text">{review.score.toFixed(1)}</span>
+        <span className="text-base text-text-muted">/ 10</span>
+      </span>
     </div>
   );
 }

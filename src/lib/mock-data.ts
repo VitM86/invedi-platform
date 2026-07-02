@@ -42,7 +42,8 @@ export interface Unit {
 export type ReviewVerdict = "Recommended" | "Recommended with reservations" | "Not recommended";
 
 export interface ProjectReview {
-  /** Out of 10, one decimal (e.g. 8.3). Maps to a half-step 5-star view in StarScore. */
+  /** Out of 10, one decimal (e.g. 8.3). Public surfaces show only the 1–3 star tier derived
+   *  by `scoreToStars`; this number itself appears only inside the gated full analysis. */
   score: number;
   verdict: ReviewVerdict;
   /** Two-to-three-sentence neutral analytical summary explaining the score. */
@@ -53,6 +54,30 @@ export interface ProjectReview {
   considerations: string[];
   /** Five-criterion breakdown with a per-line score and one-line note. */
   criteria: { label: string; score: number; note: string }[];
+}
+
+/**
+ * scoreToStars — SINGLE SOURCE OF TRUTH for the public 1/2/3-star rating.
+ *
+ * Team decision: the public-facing rating is stars, not the numeric score. The numeric
+ * `score` above still exists (and drives the per-criteria breakdown), but it is only ever
+ * shown inside the gated full analysis. Everywhere public we render stars derived from it.
+ *
+ * Mapping (lower bound inclusive at each step, so 8.0 → 2★ and 9.0 → 3★):
+ *   9–10   → 3 stars
+ *   8–9    → 2 stars
+ *   6.5–8  → 1 star
+ *   < 6.5  → 0 (NO badge at all — callers must render nothing, not a "no star" label)
+ *
+ * Kept next to the score data on purpose so the mapping can never diverge from the field
+ * it reads. Any surface that shows the rating must go through this function.
+ */
+// TODO(open-question): treatment of sub-6.5 projects to be confirmed with founders.
+export function scoreToStars(score: number): 0 | 1 | 2 | 3 {
+  if (score >= 9) return 3;
+  if (score >= 8) return 2;
+  if (score >= 6.5) return 1;
+  return 0;
 }
 
 export interface Project {
@@ -323,7 +348,8 @@ const SEEDS: ProjectSeed[] = [
     tier: 2,
     isCurated: true,
     review: {
-      score: 8.8,
+      // Bumped 8.8 → 9.2 so the demo set spans all three tiers (this is the sole 3★ project).
+      score: 9.2,
       verdict: "Recommended",
       summary:
         "Olive Grove is one of the strongest Costa-Blanca entries we currently track. The pool, gym and spa programme is genuinely premium for the price range, the developer has a clean delivery record, and Alicante's rental market remains robust year-round. Short-term letting adds optionality for a yield-focused buyer.",

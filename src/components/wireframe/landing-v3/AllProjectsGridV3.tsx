@@ -34,7 +34,9 @@ export function AllProjectsGridV3() {
 
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((p) => (
-            <ProjectCard key={p.slug} project={p} />
+            // showScore: /v3 surfaces the Invedi star badge on cards. The shared card stays
+            // unchanged on / and /v2 (they don't pass this).
+            <ProjectCard key={p.slug} project={p} showScore />
           ))}
         </div>
       </div>

@@ -6,6 +6,7 @@ import {
   projects,
   formatPriceRange,
   formatRange,
+  scoreToStars,
   type Project,
 } from "@/lib/mock-data";
 import { AppHeader } from "@/components/wireframe/AppHeader";
@@ -14,7 +15,7 @@ import { ProjectGallery } from "@/components/wireframe/project/ProjectGallery";
 import { ProjectActions } from "@/components/wireframe/project/ProjectActions";
 import { RegionOverview } from "@/components/wireframe/project/RegionOverview";
 import { EditorialNote } from "@/components/wireframe/project/EditorialNote";
-import { StarScore } from "@/components/wireframe/project/StarScore";
+import { InvediStars } from "@/components/wireframe/project/StarScore";
 import { SalesStatus } from "@/components/wireframe/project/SalesStatus";
 import { GatedUnits } from "@/components/wireframe/project/GatedUnits";
 import { LightProjectMap } from "@/components/wireframe/project/LightProjectMap";
@@ -184,12 +185,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /** Compact at-a-glance review block — top of the right rail, above the Interested card.
- *  Public teaser only: stars + numeric score + verdict pill + first sentence of the summary.
- *  The full review (strengths / considerations / criteria breakdown) lives lower on the
- *  page inside EditorialNote and is GATED behind signup — this teaser is what convinces
- *  the user there's an assessment worth unlocking. */
+ *  Public teaser only: the Invedi star rating (1–3 stars) + verdict pill + first sentence of
+ *  the summary. Per the star-system decision the numeric score is NOT shown here — it lives
+ *  only inside the gated full analysis (EditorialNote). The full review (strengths /
+ *  considerations / criteria breakdown + the number) is GATED behind signup — this teaser is
+ *  what convinces the user there's an assessment worth unlocking. */
 function ProjectScoreSummary({ project }: { project: Project }) {
   const r = project.review;
+  const stars = scoreToStars(r.score);
   /** First sentence of the summary as the short verdict caption. The full multi-sentence
    *  summary lives inside EditorialNote further down (behind the signup gate). */
   const headline = r.summary.split(/(?<=[.!?])\s+/, 1)[0] ?? r.summary;
@@ -201,9 +204,12 @@ function ProjectScoreSummary({ project }: { project: Project }) {
       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-text-muted">
         Invedi score
       </p>
-      <div className="mt-2">
-        <StarScore score={r.score} size="md" />
-      </div>
+      {/* Stars only — sub-6.5 projects (0 stars) show no rating at all, just the verdict. */}
+      {stars >= 1 && (
+        <div className="mt-2">
+          <InvediStars stars={stars} size="md" />
+        </div>
+      )}
       <p className="mt-3 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark">
         {r.verdict}
       </p>

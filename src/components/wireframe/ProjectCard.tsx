@@ -14,9 +14,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Project } from "@/lib/mock-data";
-import { availabilityOf, formatPriceRange, formatRange } from "@/lib/mock-data";
+import { availabilityOf, formatPriceRange, formatRange, scoreToStars } from "@/lib/mock-data";
 import { projectImages, projectThumb } from "@/lib/images";
 import { VerifiedBadge } from "./VerifiedBadge";
+import { InvediStars } from "./project/StarScore";
 
 function LocationLine({ project, className = "" }: { project: Project; className?: string }) {
   return (
@@ -40,9 +41,18 @@ function Chip({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({
+  project,
+  showScore = false,
+}: {
+  project: Project;
+  /** Opt-in Invedi star badge on the render. Off by default so the shared card stays
+   *  visually unchanged on / and /v2; the /v3 grid passes this. Sub-6.5 → no badge. */
+  showScore?: boolean;
+}) {
   const images = projectImages(project.slug, project.heroCount);
   const [idx, setIdx] = useState(0);
+  const stars = scoreToStars(project.review.score);
 
   // TODO(open-question): unverified hierarchy — current default is "badge + slight
   // desaturation". Applied as grayscale + reduced opacity on the render only, text stays full.
@@ -76,6 +86,15 @@ export function ProjectCard({ project }: { project: Project }) {
 
         {/* Verified badge removed per founder */}
         {/* Save button removed per founder */}
+
+        {/* Invedi star rating — small badge, top-left. Opt-in (showScore) so only /v3 shows
+            it; the public rating is stars, never the number. Sub-6.5 projects (0 stars) show
+            no badge at all. Decorative/non-interactive so it never blocks the card link. */}
+        {showScore && stars >= 1 && (
+          <div className="pointer-events-none absolute left-3 top-3 z-20 inline-flex items-center rounded-full bg-white/90 px-2 py-1 shadow-sm ring-1 ring-black/5 backdrop-blur-sm">
+            <InvediStars stars={stars} size="sm" />
+          </div>
+        )}
 
         {/* Carousel arrows */}
         <button
