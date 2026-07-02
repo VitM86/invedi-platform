@@ -1,26 +1,33 @@
 "use client";
 
 /**
- * RegionOverview — market-context layer for the project page (inserted between Location and
- * Units). Left: a LIVE light Mapbox map (RegionMapLive) with the project + same-country
- * neighbours + reference pills, and an Expand → dark bird-view. Right: a comparison table of
- * nearby new-builds.
+ * RegionOverview — consolidated market-context block on the project page.
  *
- * Now a client component (was a server component) so the ComparisonTable can read
- * useUnlock() — the gated rows (project + first comparable visible, rest blurred behind
- * a signup prompt) share the same UnlockProvider flag as the rest of the platform's
- * signup-style gates. Data prep is pure mock-data lookup, no SSR-only APIs needed.
+ * One region map on top (RegionMapV3: Normal / Satellite / Bird-eye, other-projects toggle,
+ * distinct gold current-project pin), then TWO stacked tables below:
+ *   - "Projects in the region": the live comparison table (this project + comparables), gated
+ *     from the 2nd comparable behind the shared signup gate.
+ *   - "Past projects in the region": completed/historical developments (mock), gated from the
+ *     2nd row, with a clean empty state when a region has none.
+ *
+ * Client component so the tables can read useUnlock() — same UnlockProvider flag as every gate.
  */
 
-import { getProject, projects, referencePointsFor, type CountryCode, type Project } from "@/lib/mock-data";
-import { RegionMapLive } from "./RegionMapLive";
+import {
+  getProject,
+  projects,
+  referencePointsFor,
+  pastProjectsFor,
+  formatPriceRange,
+  type CountryCode,
+  type HistoricalProject,
+  type Project,
+} from "@/lib/mock-data";
+import { RegionMapV3 } from "./RegionMapV3";
 import { useUnlock } from "../UnlockProvider";
 import { SignupCard } from "../SignupBlurGate";
 
-// Rough geographic ordering used only to top up the comparison set when a country has <3
-// other projects in the mock data.
-// TODO(open-question): region scoping currently uses COUNTRY. Should it be city / radius
-// instead? The map shows same-country pins; the table tops up from nearest countries.
+// Top up the comparison set when a country has <4 other projects in the mock data.
 const COUNTRY_NEIGHBOURS: Record<CountryCode, CountryCode[]> = {
   NL: ["DE", "FR", "ES", "PT", "GR"],
   DE: ["NL", "FR", "ES", "PT", "GR"],
@@ -42,12 +49,10 @@ function avgBedrooms(p: Project): string {
   return mean.toFixed(1);
 }
 
-/** Current project first (highlighted), then same-country projects, then nearest countries. */
+/** Current project first, then same-country projects, then nearest countries. Up to 5 rows. */
 function comparisonSet(current: Project): Project[] {
   const sameCountry = projects.filter((p) => p.country === current.country && p.slug !== current.slug);
-  const fillers = COUNTRY_NEIGHBOURS[current.country].flatMap((cc) =>
-    projects.filter((p) => p.country === cc),
-  );
+  const fillers = COUNTRY_NEIGHBOURS[current.country].flatMap((cc) => projects.filter((p) => p.country === cc));
   const seen = new Set<string>([current.slug]);
   const others: Project[] = [];
   for (const p of [...sameCountry, ...fillers]) {
@@ -55,31 +60,59 @@ function comparisonSet(current: Project): Project[] {
     seen.add(p.slug);
     others.push(p);
   }
-  return [current, ...others.slice(0, 4)]; // 5 rows total
+  return [current, ...others.slice(0, 4)];
 }
+
+/* ------------------------------------------------------------------ */
+/* Shared table chrome                                                 */
+/* ------------------------------------------------------------------ */
+
+/** Bottom signup overlay covering the blurred (gated) rows. Shared by both tables. */
+function GateOverlay({ prompt, sub }: { prompt: string; sub: string }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center justify-end bg-gradient-to-t from-background via-background/90 to-transparent px-3 pb-4 pt-20">
+      <div className="pointer-events-auto w-full max-w-sm">
+        <SignupCard prompt={prompt} sub={sub} />
+      </div>
+    </div>
+  );
+}
+
+const TH = "px-3 py-2.5";
+
+/* ------------------------------------------------------------------ */
+/* Table 1 — Projects in the region (comparison)                       */
+/* ------------------------------------------------------------------ */
 
 function ComparisonTable({ current, rows }: { current: Project; rows: Project[] }) {
   const { unlocked } = useUnlock();
-  // First TEASER_VISIBLE rows are always public: the project's own row + the first
-  // comparable. Everything after is gated behind the signup overlay until the session
-  // is unlocked — Crunchbase / PitchBook style "show enough to demonstrate value".
-  const TEASER_VISIBLE = 2;
-  const gateFrom = unlocked ? rows.length : TEASER_VISIBLE;
+  const TEASER_VISIBLE = 2; // this project + first comparable
+  const gateFrom = unlocked ? rows.length : Math.min(TEASER_VISIBLE, rows.length);
 
   return (
     <div>
-      {/* `relative` lets the absolute overlay sit on the lower (blurred) rows. `overflow-
-          hidden` lets the gradient/card respect the rounded corners cleanly. */}
       <div className="relative overflow-hidden rounded border border-border">
-        <table className="w-full min-w-[380px] border-collapse text-[13px]">
+        <table className="w-full min-w-[360px] table-fixed border-collapse text-[13px]">
+          <colgroup>
+            <col className="w-[34%]" />
+            <col className="w-[14%]" />
+            <col className="w-[9%]" />
+            <col className="w-[11%]" />
+            <col className="w-[22%]" />
+            <col className="w-[10%]" />
+          </colgroup>
           <thead>
-            <tr className="bg-surface text-left text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-              <th className="px-2.5 py-2.5">Project</th>
-              <th className="px-2 py-2.5 text-right">€/m²</th>
-              <th className="px-2 py-2.5 text-right">Units</th>
-              <th className="px-2 py-2.5 text-right">Avg&nbsp;beds</th>
-              <th className="px-2 py-2.5">Completion</th>
-              <th className="px-2 py-2.5 text-center">Verified</th>
+            <tr className="border-b border-border bg-surface text-left text-[10px] font-semibold uppercase text-text-muted [&>th]:overflow-hidden [&>th]:whitespace-nowrap">
+              <th className={TH}>Project</th>
+              <th className={`${TH} text-right`}>€/m²</th>
+              <th className={`${TH} text-right`}>Units</th>
+              <th className={`${TH} text-right`}>Beds</th>
+              <th className={TH}>Completion</th>
+              <th className={`${TH} text-center`} aria-label="Verified">
+                <svg aria-hidden className="mx-auto h-3.5 w-3.5 text-text-muted" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -90,33 +123,22 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
                 <tr
                   key={p.slug}
                   aria-hidden={isGated || undefined}
-                  className={`border-t border-border ${isCurrent ? "bg-surface-tint" : ""} ${
-                    isGated ? "pointer-events-none select-none [filter:blur(5px)]" : ""
-                  }`}
+                  className={`border-t border-border ${isCurrent ? "bg-surface-tint" : ""} ${isGated ? "pointer-events-none select-none [filter:blur(5px)]" : ""}`}
                 >
                   <td className={`px-2.5 py-3 ${isCurrent ? "border-l-2 border-primary" : ""}`}>
                     <div className="font-semibold text-text">{p.name}</div>
                     {isCurrent && (
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-primary-dark">
-                        This project
-                      </div>
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-primary-dark">This project</div>
                     )}
-                    <div className="text-xs text-text-muted">
-                      {p.developer} · {p.city}
-                    </div>
+                    <div className="text-xs text-text-muted">{p.developer} · {p.city}</div>
                   </td>
-                  <td className="px-2.5 py-3 text-right font-medium text-text">
-                    €{pricePerM2(p).toLocaleString("nl-NL")}
-                  </td>
+                  <td className="px-2.5 py-3 text-right font-medium text-text">€{pricePerM2(p).toLocaleString("nl-NL")}</td>
                   <td className="px-2.5 py-3 text-right text-text">{p.totalUnits}</td>
                   <td className="px-2.5 py-3 text-right text-text">{avgBedrooms(p)}</td>
                   <td className="px-2.5 py-3 text-text-muted">{p.completion}</td>
                   <td className="px-2.5 py-3 text-center">
                     {p.verified ? (
-                      <span
-                        title="Verified"
-                        className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-verified-bg text-verified"
-                      >
+                      <span title="Verified" className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-verified-bg text-verified">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                         </svg>
@@ -131,51 +153,121 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
           </tbody>
         </table>
 
-        {/* Signup overlay — covers the lower (blurred) rows with a fade-in gradient and the
-            signup card. Positioned at the bottom so the visible rows remain legible and the
-            card sits naturally in the gated zone. TODO(copy): founder to refine prompt. */}
         {!unlocked && rows.length > TEASER_VISIBLE && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center justify-end bg-gradient-to-t from-background via-background/90 to-transparent px-3 pb-4 pt-20">
-            <div className="pointer-events-auto w-full max-w-sm">
-              <SignupCard
-                prompt="Sign up to see the full comparison"
-                sub={`See all ${rows.length} projects in this market.`}
-              />
-            </div>
-          </div>
+          <GateOverlay prompt="Sign up to see the full comparison" sub={`See all ${rows.length} projects in this market.`} />
         )}
       </div>
       <p className="mt-2 text-xs italic text-text-muted">
-        Comparison based on listed asking prices. Includes both verified and unverified projects
-        for market context.
+        Comparison based on listed asking prices. Includes both verified and unverified projects for market context.
       </p>
     </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Table 2 — Past projects in the region (historical)                  */
+/* ------------------------------------------------------------------ */
+
+function PastProjectsTable({ rows }: { rows: HistoricalProject[] }) {
+  const { unlocked } = useUnlock();
+
+  if (rows.length === 0) {
+    return (
+      <div className="rounded border border-dashed border-border bg-surface/40 px-6 py-10 text-center">
+        <p className="text-sm font-semibold text-text">No completed projects tracked in this region yet</p>
+        <p className="mt-1 text-sm text-text-muted">As developments complete, they’ll appear here for historical context.</p>
+      </div>
+    );
+  }
+
+  const TEASER_VISIBLE = 1; // first row public, rest gated
+  const gateFrom = unlocked ? rows.length : Math.min(TEASER_VISIBLE, rows.length);
+
+  return (
+    <div>
+      <div className="relative overflow-hidden rounded border border-border">
+        <table className="w-full min-w-[360px] table-fixed border-collapse text-[13px]">
+          <colgroup>
+            <col className="w-[40%]" />
+            <col className="w-[16%]" />
+            <col className="w-[12%]" />
+            <col className="w-[32%]" />
+          </colgroup>
+          <thead>
+            <tr className="border-b border-border bg-surface text-left text-[10px] font-semibold uppercase text-text-muted [&>th]:overflow-hidden [&>th]:whitespace-nowrap">
+              <th className={TH}>Project</th>
+              <th className={`${TH} text-right`}>Completed</th>
+              <th className={`${TH} text-right`}>Units</th>
+              <th className={`${TH} text-right`}>Price at sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((h, i) => {
+              const isGated = i >= gateFrom;
+              return (
+                <tr
+                  key={h.id}
+                  aria-hidden={isGated || undefined}
+                  className={`border-t border-border ${isGated ? "pointer-events-none select-none [filter:blur(5px)]" : ""}`}
+                >
+                  <td className="px-2.5 py-3">
+                    <div className="font-semibold text-text">{h.name}</div>
+                    <div className="text-xs text-text-muted">{h.developer} · {h.region}</div>
+                  </td>
+                  <td className="px-2.5 py-3 text-right text-text">{h.completedYear}</td>
+                  <td className="px-2.5 py-3 text-right text-text">{h.units}</td>
+                  <td className="px-2.5 py-3 text-right text-text-muted">
+                    {h.priceRangeAtSale ? formatPriceRange(h.priceRangeAtSale[0], h.priceRangeAtSale[1]) : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {!unlocked && rows.length > TEASER_VISIBLE && (
+          <GateOverlay prompt="Sign up to see past projects" sub={`See all ${rows.length} completed projects in this region.`} />
+        )}
+      </div>
+      <p className="mt-2 text-xs italic text-text-muted">
+        {/* TODO(data): placeholder historical projects. */}
+        Completed developments tracked for market context. Prices reflect asking ranges at time of sale.
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 export function RegionOverview({ project }: { project: Project }) {
-  // Defensive: project always exists here, but keep types happy if called standalone.
   if (!getProject(project.slug)) return null;
 
   const sameCountry = projects.filter((p) => p.country === project.country && p.slug !== project.slug);
   const rows = comparisonSet(project);
+  const past = pastProjectsFor(project);
 
   return (
-    <section>
+    <section id="region-overview">
       <h2 className="mb-1 text-xl font-semibold text-text">Region overview</h2>
       <p className="mb-4 text-sm text-text-muted">
         A wider lens on {project.city} and nearby new-build developments.
       </p>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <RegionMapLive project={project} neighbours={sameCountry} refs={referencePointsFor(project)} />
+      {/* One map, full width */}
+      <RegionMapV3 project={project} others={sameCountry} refs={referencePointsFor(project)} />
+
+      {/* Two tables, stacked below */}
+      <div className="mt-8 space-y-9">
+        <div>
+          <h3 className="text-base font-semibold text-text">Projects in the region</h3>
+          <p className="mb-3 text-sm text-text-muted">How {project.name} compares to other new-builds in {project.region}.</p>
+          <ComparisonTable current={project} rows={rows} />
+        </div>
 
         <div>
-          <h3 className="text-base font-semibold text-text">
-            How this project compares in {project.region}
-          </h3>
-          <p className="mb-3 text-sm text-text-muted">Other new-build developments in the area</p>
-          <ComparisonTable current={project} rows={rows} />
+          <h3 className="text-base font-semibold text-text">Past projects in the region</h3>
+          <p className="mb-3 text-sm text-text-muted">Completed developments in {project.region} for historical context.</p>
+          <PastProjectsTable rows={past} />
         </div>
       </div>
     </section>

@@ -679,6 +679,50 @@ export function getUnit(slug: string, unitId: string): Unit | undefined {
   return getProject(slug)?.units.find((u) => u.id === unitId);
 }
 
+/* ------------------------------------------------------------------ */
+/* Past / completed projects — historical market context                */
+/* ------------------------------------------------------------------ */
+
+export interface HistoricalProject {
+  id: string;
+  name: string;
+  developer: string;
+  country: CountryCode;
+  region: string;
+  completedYear: number;
+  units: number;
+  /** Asking price range at time of sale, EUR. Optional — some records are price-unknown. */
+  priceRangeAtSale?: [number, number];
+}
+
+// TODO(data): placeholder historical projects. Mock completed developments per country, shown in
+// the "Past projects in the region" table. Counts vary on purpose — Spain has several, France one,
+// and Germany/Greece none — so the table's flexible layout + empty state are both exercised.
+export const historicalProjects: HistoricalProject[] = [
+  // Spain
+  { id: "es-hist-1", name: "Alba Marina", developer: "Mediterra Estates", country: "ES", region: "Costa Blanca", completedYear: 2023, units: 48, priceRangeAtSale: [285000, 540000] },
+  { id: "es-hist-2", name: "Sierra Blanca Villas", developer: "Costa Living S.L.", country: "ES", region: "Costa del Sol", completedYear: 2022, units: 22, priceRangeAtSale: [640000, 1250000] },
+  { id: "es-hist-3", name: "Puerto Azul", developer: "Levante Homes", country: "ES", region: "Costa Blanca", completedYear: 2021, units: 60, priceRangeAtSale: [230000, 415000] },
+  { id: "es-hist-4", name: "Jardines del Mar", developer: "Mediterra Estates", country: "ES", region: "Costa Blanca", completedYear: 2020, units: 34 },
+  { id: "es-hist-5", name: "Mirador Alicante", developer: "Levante Homes", country: "ES", region: "Alicante", completedYear: 2019, units: 41, priceRangeAtSale: [210000, 380000] },
+  // Portugal
+  { id: "pt-hist-1", name: "Douro Riverside I", developer: "Northstar Developments", country: "PT", region: "Porto & Douro", completedYear: 2022, units: 30, priceRangeAtSale: [320000, 690000] },
+  { id: "pt-hist-2", name: "Foz Atlântico", developer: "Atlantic Living", country: "PT", region: "Porto & Douro", completedYear: 2021, units: 26, priceRangeAtSale: [410000, 880000] },
+  { id: "pt-hist-3", name: "Ribeira Lofts", developer: "Atlantic Living", country: "PT", region: "Porto & Douro", completedYear: 2019, units: 18 },
+  // Netherlands
+  { id: "nl-hist-1", name: "Havenkwartier Fase 1", developer: "Northstar Developments", country: "NL", region: "Randstad", completedYear: 2022, units: 72, priceRangeAtSale: [345000, 610000] },
+  { id: "nl-hist-2", name: "Kanaaloevers", developer: "Atlas Build Group", country: "NL", region: "Randstad", completedYear: 2020, units: 54, priceRangeAtSale: [298000, 520000] },
+  // France — deliberately a single row (few-comparables layout check)
+  { id: "fr-hist-1", name: "Les Terrasses du Parc", developer: "Hexagone Promotion", country: "FR", region: "Île-de-France", completedYear: 2021, units: 38, priceRangeAtSale: [360000, 720000] },
+  // Germany / Greece: none → empty state
+];
+
+/** Past/completed projects for the current project's region (country-scoped). An empty result
+ *  is valid — the table renders a clean "no completed projects" state. */
+export function pastProjectsFor(p: Project): HistoricalProject[] {
+  return historicalProjects.filter((h) => h.country === p.country);
+}
+
 export const countryOptions: { code: CountryCode; label: string }[] = Array.from(
   new Map(projects.map((p) => [p.country, p.countryLabel])).entries(),
 ).map(([code, label]) => ({ code: code as CountryCode, label }));

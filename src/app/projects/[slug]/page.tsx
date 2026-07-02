@@ -18,8 +18,6 @@ import { EditorialNote } from "@/components/wireframe/project/EditorialNote";
 import { InvediStars } from "@/components/wireframe/project/StarScore";
 import { SalesStatus } from "@/components/wireframe/project/SalesStatus";
 import { GatedUnits } from "@/components/wireframe/project/GatedUnits";
-import { LightProjectMap } from "@/components/wireframe/project/LightProjectMap";
-import { MapPlaceholder } from "@/components/wireframe/project/MapPlaceholder";
 import { PhiButton } from "@/components/wireframe/PhiButton";
 
 export function generateStaticParams() {
@@ -128,23 +126,9 @@ export default async function ProjectPage({
               </div>
             </Section>
 
-            <Section title="Location">
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <LightProjectMap
-                  className="aspect-[16/10] w-full"
-                  pins={[{ id: project.slug, lng: project.lng, lat: project.lat, primary: true }]}
-                  center={[project.lng, project.lat]}
-                  zoom={13.5}
-                  fallback={<MapPlaceholder className="aspect-[16/10] w-full" />}
-                />
-                <div>
-                  <h3 className="mb-1.5 text-sm font-semibold text-text">Neighbourhood</h3>
-                  <p className="text-sm leading-6 text-text-muted">{project.neighbourhood}</p>
-                </div>
-              </div>
-            </Section>
-
-            {/* Market context + editorial perspective — inserted between Location and Units */}
+            {/* Market context — one consolidated region map (Normal / Satellite / Bird-eye +
+                other-projects toggle) with the comparison and past-projects tables below it.
+                The standalone Location map was merged into this block to remove the duplicate map. */}
             <RegionOverview project={project} />
 
             <EditorialNote project={project} />
