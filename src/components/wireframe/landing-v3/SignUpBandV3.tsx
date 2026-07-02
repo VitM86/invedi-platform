@@ -27,13 +27,24 @@ type SignUpCard = {
   // TODO(link): Buyer / Broker → Invedi residences route once defined; Group of buyers
   // points at Bulk & fractional (separate product, not built yet — placeholder #).
   href: string;
+  /** Optional secondary in-card link. Broker · Agent routes into BOTH products, so its card
+   *  points primarily at Residences and carries a small secondary link to Bulk & fractional. */
+  secondary?: { label: string; href: string };
 };
 
 const CARDS: SignUpCard[] = [
   { title: "Buyer",            subLabel: "(Invedi residences)", href: "/explore" },
-  { title: "Broker · Agent",   subLabel: "(Invedi residences)", href: "/explore" },
+  {
+    title: "Broker · Agent",
+    subLabel: "(Invedi residences | Bulk & fractional)",
+    href: "/explore",
+    secondary: { label: "Bulk & fractional", href: "/bulk-fractional" },
+  },
   { title: "Group of buyers",  subLabel: "(Bulk & fractional)", href: "#" },
 ];
+
+const CARD_SHELL =
+  "flex h-full flex-col justify-between gap-10 rounded-2xl border border-[#e6dfd2] bg-white p-7 transition hover:border-text/40 hover:shadow-sm lg:p-8";
 
 function Arrow({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -60,12 +71,8 @@ export function SignUpBandV3() {
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 lg:mt-16">
-          {CARDS.map((c) => (
-            <Link
-              key={c.title}
-              href={c.href}
-              className="group flex h-full flex-col justify-between gap-10 rounded-2xl border border-[#e6dfd2] bg-white p-7 transition hover:border-text/40 hover:shadow-sm lg:p-8"
-            >
+          {CARDS.map((c) => {
+            const Head = (
               <div>
                 <h3
                   className="text-[24px] font-light leading-[1.2] tracking-tight text-text lg:text-[28px]"
@@ -77,12 +84,44 @@ export function SignUpBandV3() {
                   {c.subLabel}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.18em] text-text">
-                Sign up
-                <Arrow className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </Link>
-          ))}
+            );
+
+            // Broker · Agent routes into both products → not a single full-card link: a
+            // primary "Sign up" (Residences) plus a small secondary link to Bulk & fractional.
+            if (c.secondary) {
+              return (
+                <div key={c.title} className={CARD_SHELL}>
+                  {Head}
+                  <div className="flex flex-col gap-2.5">
+                    <Link
+                      href={c.href}
+                      className="group inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.18em] text-text"
+                    >
+                      Sign up
+                      <Arrow className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                    <Link
+                      href={c.secondary.href}
+                      className="group inline-flex items-center gap-1 text-[12px] font-medium text-text-muted transition-colors hover:text-text"
+                    >
+                      {c.secondary.label}
+                      <Arrow className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <Link key={c.title} href={c.href} className={`group ${CARD_SHELL}`}>
+                {Head}
+                <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.18em] text-text">
+                  Sign up
+                  <Arrow className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

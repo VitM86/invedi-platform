@@ -63,20 +63,23 @@ export interface ProjectReview {
  * `score` above still exists (and drives the per-criteria breakdown), but it is only ever
  * shown inside the gated full analysis. Everywhere public we render stars derived from it.
  *
- * Mapping (lower bound inclusive at each step, so 8.0 → 2★ and 9.0 → 3★):
- *   9–10   → 3 stars
- *   8–9    → 2 stars
- *   6.5–8  → 1 star
- *   < 6.5  → 0 (NO badge at all — callers must render nothing, not a "no star" label)
+ * Founder-updated thresholds:
+ *   9.0–10.0 → 3 stars
+ *   7.5–8.5  → 2 stars
+ *   6.0–7.0  → 1 star
+ *   < 6.0    → 0 (NO badge at all — callers must render nothing, not a "no star" label)
+ *
+ * The stated bands leave two gaps (7.0–7.5 and 8.5–9.0). For now those round DOWN to the
+ * lower tier: 7.2 → 1★, 8.7 → 2★ (i.e. thresholds are >=9 → 3, >=7.5 → 2, >=6 → 1).
+ * // TODO(open-question): gap ranges 7.0-7.5 and 8.5-9.0, founder to confirm exact thresholds.
  *
  * Kept next to the score data on purpose so the mapping can never diverge from the field
  * it reads. Any surface that shows the rating must go through this function.
  */
-// TODO(open-question): treatment of sub-6.5 projects to be confirmed with founders.
 export function scoreToStars(score: number): 0 | 1 | 2 | 3 {
   if (score >= 9) return 3;
-  if (score >= 8) return 2;
-  if (score >= 6.5) return 1;
+  if (score >= 7.5) return 2;
+  if (score >= 6) return 1;
   return 0;
 }
 

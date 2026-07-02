@@ -37,11 +37,11 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
               Developers is intentionally dropped per the latest founder session. Sibling-
               shape to AppHeader so the swap on scroll feels continuous. */}
           <div className="flex items-center gap-6 lg:gap-9">
-            <NavLink href="/explore">Residences</NavLink>
+            <NavLink href="/explore" className="whitespace-nowrap">Invedi Residences</NavLink>
             <NavLink href="/bulk-fractional" className="hidden sm:inline-flex whitespace-nowrap">
               Bulk &amp; fractional
             </NavLink>
-            <NavLink href="#" className="hidden md:inline-flex">About</NavLink>
+            <NavLink href="#" className="hidden whitespace-nowrap md:inline-flex">About us</NavLink>
           </div>
 
           {/* Center: Invedi monogram + wordmark — LIGHT variant (gold monogram + cream
