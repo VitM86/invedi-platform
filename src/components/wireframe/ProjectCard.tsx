@@ -185,6 +185,8 @@ export function ProjectCard({
 }
 
 export function CompactProjectCard({ project }: { project: Project }) {
+  // Explore-only popover (map hover); shows the Invedi star badge to match the grid cards.
+  const stars = scoreToStars(project.review.score);
   return (
     <div className="w-64 overflow-hidden rounded border border-border bg-background shadow-xl">
       <div className="relative h-28">
@@ -198,6 +200,11 @@ export function CompactProjectCard({ project }: { project: Project }) {
         <div className="pointer-events-none absolute left-2.5 top-2.5">
           <VerifiedBadge verified={project.verified} />
         </div>
+        {stars >= 1 && (
+          <div className="pointer-events-none absolute right-2.5 top-2.5 inline-flex items-center rounded-full bg-white/90 px-1.5 py-0.5 shadow-sm ring-1 ring-black/5 backdrop-blur-sm">
+            <InvediStars stars={stars} size="sm" />
+          </div>
+        )}
       </div>
       <div className="p-3">
         <h4 className="truncate text-sm font-bold text-text">{project.name}</h4>

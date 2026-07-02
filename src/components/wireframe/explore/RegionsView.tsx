@@ -221,7 +221,8 @@ export function RegionsView({
             ) : (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {gridProjects.map((p) => (
-                  <ProjectCard key={p.slug} project={p} />
+                  // showScore: explore surfaces the Invedi star badge, same as /v3.
+                  <ProjectCard key={p.slug} project={p} showScore />
                 ))}
               </div>
             )}
