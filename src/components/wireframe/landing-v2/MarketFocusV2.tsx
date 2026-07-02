@@ -16,6 +16,8 @@ import { SectionIntroV2 } from "./SectionIntroV2";
 const SERIF: CSSProperties = { fontFamily: "var(--font-serif)" };
 
 const LIVE: CountryCode[] = ["PT", "ES"];
+/** Default coming-soon set for /v2. /v3 passes its own final set via the `comingSoon` prop
+ *  so this shared component can change on /v3 without touching /v2. */
 const COMING_SOON = ["Netherlands", "France", "Germany", "Greece"];
 
 /** Editorial "travel-feel" subline per country. Order = south → north / coast → city. */
@@ -32,7 +34,7 @@ function Arrow({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-export function MarketFocusV2() {
+export function MarketFocusV2({ comingSoon = COMING_SOON }: { comingSoon?: string[] } = {}) {
   const live = countriesWithRegions.filter((c) => LIVE.includes(c.code));
 
   return (
@@ -98,7 +100,7 @@ export function MarketFocusV2() {
             Coming soon
           </span>
           <span className="text-text-muted/40">/</span>
-          {COMING_SOON.map((s) => (
+          {comingSoon.map((s) => (
             <span
               key={s}
               className="rounded-full border border-[#e6dfd2] px-3 py-1 text-[13px] font-light text-text-muted"

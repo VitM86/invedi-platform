@@ -41,7 +41,7 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
             <NavLink href="/bulk-fractional" className="hidden sm:inline-flex whitespace-nowrap">
               Bulk &amp; fractional
             </NavLink>
-            <NavLink href="#" className="hidden whitespace-nowrap md:inline-flex">About us</NavLink>
+            <NavLink href="/about" className="hidden whitespace-nowrap md:inline-flex">About us</NavLink>
           </div>
 
           {/* Center: Invedi monogram + wordmark — LIGHT variant (gold monogram + cream

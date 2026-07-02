@@ -6,7 +6,11 @@ import { WhyInvediV2 } from "@/components/wireframe/landing-v2/WhyInvediV2";
 import { MarketFocusV2 } from "@/components/wireframe/landing-v2/MarketFocusV2";
 import { HeroV3 } from "@/components/wireframe/landing-v3/HeroV3";
 import { AllProjectsGridV3 } from "@/components/wireframe/landing-v3/AllProjectsGridV3";
+import { PlatformFeaturesV3 } from "@/components/wireframe/landing-v3/PlatformFeaturesV3";
 import { SignUpBandV3 } from "@/components/wireframe/landing-v3/SignUpBandV3";
+
+// Final coming-soon markets for /v3 (passed to the shared MarketFocusV2 so /v2 keeps its own).
+const V3_COMING_SOON = ["The Netherlands", "UAE", "Germany", "London / UK", "South Florida / USA"];
 
 /** Display serif scoped to /v3 (same approach as /v2). */
 const fraunces = Fraunces({
@@ -33,6 +37,7 @@ export const metadata: Metadata = {
 // /v3 — inventory-first ordering per founder feedback. Top to bottom:
 //   1. Hero (kept; HeroBackground stays swappable for future video/slideshow).
 //   2. Full projects grid directly below the hero (NOT a 4-card featured selection).
+//   2b. Platform features strip — 8 compact tiles (icon + label), what the platform does.
 //   3. Country/region cards (MarketFocus) — entry points into Explore filtered by market.
 //   4. Why Invedi — gated behind SHOW_CURATED_INFRA (currently false, per founder).
 //   5. Sign-up band — three audience entry points (Buyer / Broker · Agent / Group of buyers).
@@ -47,7 +52,8 @@ export default function V3Landing() {
       <HeroV3 />
       <main>
         <AllProjectsGridV3 />
-        <MarketFocusV2 />
+        <PlatformFeaturesV3 />
+        <MarketFocusV2 comingSoon={V3_COMING_SOON} />
         {SHOW_CURATED_INFRA && <WhyInvediV2 />}
         <SignUpBandV3 />
       </main>

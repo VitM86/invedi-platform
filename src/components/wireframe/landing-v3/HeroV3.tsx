@@ -55,6 +55,15 @@ const CAPTIONS = [
   "A direct path to the deal",
 ];
 
+// Hero slideshow — 3-5 project images crossfading every 10s (see HeroBackground). Balearic
+// first (lightest file → fastest first paint). // TODO(assets): swap for final hero imagery.
+const HERO_SLIDES = [
+  { src: "/images/landing/hero-balearic.jpg", alt: "A premium new-build development on the Mediterranean coast at golden hour" },
+  { src: "/images/landing/hero-marbella.jpg", alt: "A contemporary new-build residence on the Costa del Sol" },
+  { src: "/images/landing/hero-comporta.jpg", alt: "A minimalist new-build home among the pines near Comporta" },
+  { src: "/images/landing/hero-lisbon.jpg", alt: "A new-build development overlooking Lisbon" },
+];
+
 const BROKER_HREF = "/explore";
 const BUYER_HREF = "/explore";
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -93,13 +102,7 @@ export function HeroV3() {
       >
         {/* ONE rounded card — photo + glass nav + content + captions all live inside it. */}
         <div className="relative isolate h-full overflow-hidden rounded-2xl sm:rounded-3xl">
-          <HeroBackground
-            media={{
-              kind: "image",
-              src: "/images/landing/hero-balearic.jpg",
-              alt: "A premium new-build development on the Mediterranean coast at golden hour",
-            }}
-          />
+          <HeroBackground media={{ kind: "slideshow", slides: HERO_SLIDES }} />
 
           {/* Glass navbar — floating pill, inset 6px from the photo card's top/left/right.
               A thin photo strip is visible around it; backdrop blur turns the part of the
@@ -113,6 +116,17 @@ export function HeroV3() {
             className="absolute inset-x-0 z-20 flex flex-col items-center px-6 text-center lg:px-10"
             style={{ top: "22%" }}
           >
+            {/* Trust tagline — elegant eyebrow above the headline. // TODO(copy): placement
+                (hero eyebrow) is our call; founder line used verbatim. */}
+            <motion.p
+              initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduced ? 0 : 0.6, ease: EASE, delay: reduced ? 0 : 0.1 }}
+              className="mb-5 text-[11px] font-medium uppercase tracking-[0.32em] text-white/85 sm:text-[12px]"
+            >
+              Trust, built in. Buyers first. Always.
+            </motion.p>
+
             <h1 className="text-white" style={SERIF}>
               <MaskLine
                 reduced={reduced}
