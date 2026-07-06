@@ -82,6 +82,55 @@ function SignupButton({
   );
 }
 
+/** Anchor id of the residences/units section — the scroll target for the units CTAs. */
+const RESIDENCES_ID = "residences";
+
+/** "villa" for all-villa projects, "unit" otherwise — keeps CTA copy data-driven. */
+function unitNoun(project: Project): string {
+  return project.units.every((u) => u.type.toLowerCase().includes("villa")) ? "villa" : "unit";
+}
+
+/**
+ * Units CTA (advisor feedback): promises content instead of a generic sign-up ask. Scrolls to
+ * the residences section; anonymous visitors get the usual signup gate right after the scroll
+ * starts (same requestUnlock mechanic, just deferred so the movement reads first). Signed-up
+ * users simply land on the units.
+ */
+function UnitsCtaButton({
+  label,
+  size = "md",
+  variant = "solid",
+}: {
+  label: string;
+  size?: "md" | "lg";
+  /** outline = quiet secondary treatment for in-page placements on light backgrounds. */
+  variant?: "solid" | "outline";
+}) {
+  const { unlocked, requestUnlock } = useUnlock();
+  const sz = size === "lg" ? "h-14 px-8 text-base" : "h-11 px-6 text-sm";
+  const look =
+    variant === "outline"
+      ? "border border-text/25 bg-transparent text-text hover:border-text/50 hover:bg-white"
+      : "bg-primary text-white shadow-sm hover:bg-primary-hover";
+  const onClick = () => {
+    document.getElementById(RESIDENCES_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!unlocked) setTimeout(requestUnlock, 450);
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition ${sz} ${look}`}
+    >
+      {label}
+      {/* Down arrow — this CTA moves you down the page, not away from it. */}
+      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25 12 15.75 4.5 8.25" />
+      </svg>
+    </button>
+  );
+}
+
 function Overline({ children, tone = "dark" }: { children: React.ReactNode; tone?: "dark" | "light" }) {
   return (
     <p className={`text-[11px] font-medium uppercase tracking-[0.22em] ${tone === "light" ? "text-white/70" : "text-text-muted"}`}>
@@ -118,6 +167,21 @@ function StoryHeader() {
 
 function Hero({ project, story }: { project: Project; story: ProjectStory }) {
   const stars = scoreToStars(project.review.score);
+
+  // CTA promises content (advisor feedback): price list where prices are public, the unit
+  // list itself where they aren't. Counts and nouns come from data — nothing hardcoded.
+  const noun = unitNoun(project);
+  const ctaLabel = project.priceOnRequest
+    ? `View all ${project.totalUnits} ${noun}s`
+    : "Browse price list";
+
+  // Scarcity from real availability — neutral phrasing only, no countdowns. Nothing sold yet
+  // → lead with how few there are in total instead of a meaningless "8 of 8".
+  const available = project.units.filter((u) => u.status === "available").length;
+  const scarcity =
+    available === project.totalUnits
+      ? `${project.totalUnits} ${noun}s only`
+      : `${available} of ${project.totalUnits} remaining`;
 
   return (
     <section className="relative min-h-[92vh] w-full overflow-hidden bg-[#3d3a35]">
@@ -181,8 +245,13 @@ function Hero({ project, story }: { project: Project; story: ProjectStory }) {
             </p>
           )}
 
-          <div className="mt-7">
-            <SignupButton label="Sign up for full access" size="lg" />
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <UnitsCtaButton label={ctaLabel} size="lg" />
+            {/* Scarcity line — real data, no urgency theatrics. */}
+            <p className="inline-flex items-center gap-2 text-sm font-medium text-white/85">
+              <span className="h-1.5 w-1.5 rounded-full bg-white/70" aria-hidden />
+              {scarcity}
+            </p>
           </div>
         </div>
       </div>
@@ -357,6 +426,21 @@ function Collage({ project, story }: { project: Project; story: ProjectStory }) 
   );
 }
 
+/* ------------------------------------------------- Mid-page CTA */
+
+/** Quiet secondary route to the units, roughly halfway down the page (after the editorial
+ *  sections + collage). Outline treatment on the cream ground so it doesn't compete with the
+ *  hero CTA; same scroll-then-gate behaviour. */
+function MidUnitsCta() {
+  return (
+    <section style={{ backgroundColor: CREAM }}>
+      <div className={`${CONTAINER} flex justify-center pb-20 lg:pb-28`}>
+        <UnitsCtaButton label="View all units" size="md" variant="outline" />
+      </div>
+    </section>
+  );
+}
+
 /* ----------------------------------------------- Full-bleed moment */
 
 function FullBleed({ project, story }: { project: Project; story: ProjectStory }) {
@@ -429,7 +513,8 @@ function Lifestyle({ story }: { story: ProjectStory }) {
 
 function SampleUnits({ project, story }: { project: Project; story: ProjectStory }) {
   return (
-    <section style={{ backgroundColor: CREAM }}>
+    // Scroll target for the units CTAs; scroll-mt keeps the heading clear of the viewport edge.
+    <section id={RESIDENCES_ID} className="scroll-mt-6" style={{ backgroundColor: CREAM }}>
       <div className={`${CONTAINER} py-24 lg:py-32`}>
         <Reveal>
           <Overline>The residences</Overline>
@@ -735,6 +820,7 @@ export function StoryTemplate({ project }: { project: Project }) {
       <IntroWhy project={project} story={story} />
       <StatementLine story={story} />
       <Collage project={project} story={story} />
+      <MidUnitsCta />
       <FullBleed project={project} story={story} />
       <Lifestyle story={story} />
       <SampleUnits project={project} story={story} />
