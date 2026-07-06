@@ -14,7 +14,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { Project } from "@/lib/mock-data";
-import { availabilityOf, formatPriceRange, formatRange, scoreToStars } from "@/lib/mock-data";
+import { availabilityOf, formatRange, priceRangeLabel, scoreToStars } from "@/lib/mock-data";
 import { projectImages, projectThumb } from "@/lib/images";
 import { VerifiedBadge } from "./VerifiedBadge";
 import { InvediStars } from "./project/StarScore";
@@ -54,6 +54,11 @@ export function ProjectCard({
   const [idx, setIdx] = useState(0);
   const stars = scoreToStars(project.review.score);
 
+  // TODO(open-question): which link is primary from cards, founder to confirm. For now the card
+  // image + title lead to the editorial /story page when the project has one; the "View project"
+  // button always goes to the regular project page. Projects without a story keep both on /projects.
+  const primaryHref = project.story ? `/story/${project.slug}` : `/projects/${project.slug}`;
+
   // TODO(open-question): unverified hierarchy — current default is "badge + slight
   // desaturation". Applied as grayscale + reduced opacity on the render only, text stays full.
   const dim = project.verified ? "" : "opacity-95";
@@ -66,7 +71,7 @@ export function ProjectCard({
   };
 
   return (
-    <div className={`group flex flex-col overflow-hidden rounded border border-border bg-background shadow-sm transition-shadow hover:shadow-md ${dim}`}>
+    <div className={`group flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm transition-shadow hover:shadow-md ${dim}`}>
       {/* Render carousel */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
         <Image
@@ -77,9 +82,9 @@ export function ProjectCard({
           className={`object-cover ${renderDim}`}
         />
 
-        {/* Full-image click target → project page */}
+        {/* Full-image click target → story page (falls back to project page if no story) */}
         <Link
-          href={`/projects/${project.slug}`}
+          href={primaryHref}
           className="absolute inset-0 z-10"
           aria-label={`View ${project.name}`}
         />
@@ -125,7 +130,7 @@ export function ProjectCard({
           height and the View-project button (with mt-auto below) lands on a single baseline
           across cards. */}
       <div className="flex flex-1 flex-col p-4">
-        <Link href={`/projects/${project.slug}`} className="block">
+        <Link href={primaryHref} className="block">
           <h3 className="text-lg font-bold leading-snug text-text hover:underline">{project.name}</h3>
         </Link>
         <p className="mt-0.5 text-sm text-text-muted">{project.developer}</p>
@@ -140,7 +145,7 @@ export function ProjectCard({
               - gap-x-2 so the completion tag never collides with the price visually */}
         <div className="mt-3 flex items-baseline justify-between gap-x-2">
           <p className="whitespace-nowrap text-base font-semibold text-primary-dark lg:text-lg">
-            {formatPriceRange(project.priceMin, project.priceMax)}
+            {priceRangeLabel(project)}
           </p>
           <p className="whitespace-nowrap text-xs font-medium text-text-muted">{project.completion}</p>
         </div>
@@ -171,7 +176,7 @@ export function ProjectCard({
         <div className="mt-auto pt-4">
           <Link
             href={`/projects/${project.slug}`}
-            className="flex h-11 items-center justify-center gap-1.5 rounded bg-primary text-base font-semibold text-white transition hover:bg-primary-hover"
+            className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-primary text-base font-semibold text-white transition hover:bg-primary-hover"
           >
             View project
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -188,7 +193,7 @@ export function CompactProjectCard({ project }: { project: Project }) {
   // Explore-only popover (map hover); shows the Invedi star badge to match the grid cards.
   const stars = scoreToStars(project.review.score);
   return (
-    <div className="w-64 overflow-hidden rounded border border-border bg-background shadow-xl">
+    <div className="w-64 overflow-hidden rounded-2xl border border-border bg-background shadow-xl">
       <div className="relative h-28">
         <Image
           src={projectThumb(project.slug)}
@@ -214,7 +219,7 @@ export function CompactProjectCard({ project }: { project: Project }) {
             won't fit alongside the availability stat at 256px width. */}
         <div className="mt-2 border-t border-border pt-2">
           <span className="block text-sm font-semibold text-primary-dark">
-            {formatPriceRange(project.priceMin, project.priceMax)}
+            {priceRangeLabel(project)}
           </span>
           {(() => {
             const a = availabilityOf(project);
@@ -227,7 +232,7 @@ export function CompactProjectCard({ project }: { project: Project }) {
         </div>
         <Link
           href={`/projects/${project.slug}`}
-          className="mt-2.5 flex h-9 items-center justify-center rounded bg-primary text-sm font-semibold text-white transition hover:bg-primary-hover"
+          className="mt-2.5 flex h-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white transition hover:bg-primary-hover"
         >
           View project
         </Link>

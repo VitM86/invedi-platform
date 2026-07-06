@@ -65,9 +65,12 @@ export function UnitRow({ project, unit }: { project: Project; unit: Unit }) {
     >
       <div className="font-semibold text-text">{unit.name}</div>
       <div className="text-sm text-text-muted">{unit.type}</div>
-      <div className="hidden text-sm text-text-muted sm:block">Floor {unit.floor}</div>
+      {/* floor 0 = whole-villa listing — a floor number would be meaningless. */}
+      <div className="hidden text-sm text-text-muted sm:block">{unit.floor > 0 ? `Floor ${unit.floor}` : "—"}</div>
       <div className="hidden text-sm text-text-muted sm:block">{unit.area} m²</div>
-      <div className="text-right font-semibold text-text sm:text-left">{formatPriceFull(unit.price)}</div>
+      <div className="text-right font-semibold text-text sm:text-left">
+        {unit.price > 0 ? formatPriceFull(unit.price) : "Price on request"}
+      </div>
       <div className="flex items-center justify-start gap-3 sm:justify-end">
         <StatusBadge status={unit.status} />
         {/* On CURATED projects, available units get an inline Reserve trigger. The button

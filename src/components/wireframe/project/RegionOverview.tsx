@@ -132,7 +132,10 @@ function ComparisonTable({ current, rows }: { current: Project; rows: Project[] 
                     )}
                     <div className="text-xs text-text-muted">{p.developer} · {p.city}</div>
                   </td>
-                  <td className="px-2.5 py-3 text-right font-medium text-text">€{pricePerM2(p).toLocaleString("nl-NL")}</td>
+                  {/* Price-on-request projects have no comparable €/m² — show a dash. */}
+                  <td className="px-2.5 py-3 text-right font-medium text-text">
+                    {p.priceOnRequest ? "—" : `€${pricePerM2(p).toLocaleString("nl-NL")}`}
+                  </td>
                   <td className="px-2.5 py-3 text-right text-text">{p.totalUnits}</td>
                   <td className="px-2.5 py-3 text-right text-text">{avgBedrooms(p)}</td>
                   <td className="px-2.5 py-3 text-text-muted">{p.completion}</td>

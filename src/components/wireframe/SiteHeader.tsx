@@ -13,6 +13,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { LogoImage } from "./LogoImage";
 
 export function SiteHeader({
   active = "explore",
@@ -22,13 +23,13 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background">
       <div className="mx-auto flex h-full w-full max-w-[1440px] items-center justify-between px-4 lg:px-6">
-        {/* Left: logo. Placeholder text wordmark — brand colour (teal). Links home. */}
-        <Link
-          href="/"
-          className="text-2xl font-extrabold tracking-tight text-primary"
-          aria-label="Invedi — home"
-        >
-          Invedi
+        {/* Left: dark logo on the light header. Graceful text fallback if the PNG fails. */}
+        <Link href="/" aria-label="Invedi — home" className="inline-flex items-center">
+          <LogoImage
+            src="/images/logo-dark.png"
+            className="h-7 w-auto lg:h-8"
+            fallbackColorClass="text-primary-dark"
+          />
         </Link>
 
         {/* Center: primary nav — dark neutral; the current section is teal + underlined */}

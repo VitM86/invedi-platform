@@ -53,7 +53,7 @@ function CountryCard({
     <button
       onClick={onClick}
       aria-pressed={selected}
-      className={`group relative h-44 overflow-hidden rounded-lg border text-left transition-all ${
+      className={`group relative h-44 overflow-hidden rounded-2xl border text-left transition-all ${
         selected ? "border-primary ring-2 ring-primary" : "border-border hover:shadow-md"
       }`}
     >
@@ -92,7 +92,7 @@ function RegionCard({
       onClick={empty ? undefined : onClick}
       aria-pressed={selected}
       disabled={empty}
-      className={`group relative h-28 overflow-hidden rounded-lg border text-left transition-all ${
+      className={`group relative h-28 overflow-hidden rounded-2xl border text-left transition-all ${
         empty
           ? "cursor-not-allowed border-border opacity-50"
           : selected

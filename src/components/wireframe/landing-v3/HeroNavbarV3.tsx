@@ -17,8 +17,10 @@
 import Link from "next/link";
 import { type MotionValue, motion } from "framer-motion";
 import { LogoImage } from "../LogoImage";
+import { useUnlock } from "../UnlockProvider";
 
 export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<number> }) {
+  const { requestUnlock, requestSignIn } = useUnlock();
   return (
     <motion.div style={{ opacity: scrollOpacity }}>
       <motion.nav
@@ -57,21 +59,23 @@ export function HeroNavbarV3({ scrollOpacity }: { scrollOpacity: MotionValue<num
             </Link>
           </div>
 
-          {/* Right: Login (text link on glass) + Sign up (white pill with teal text). Both
-              point at placeholder routes — TODO(link) once the real auth flow lands. */}
+          {/* Right: Login (opens Sign in popup) + Sign up (opens qualification popup). Shared
+              session-wide flows from UnlockProvider. */}
           <div className="flex items-center justify-end gap-3">
-            <Link
-              href="#"
+            <button
+              type="button"
+              onClick={requestSignIn}
               className="hidden text-[13px] font-semibold text-white/95 transition-colors hover:text-white sm:inline-flex"
             >
               Login
-            </Link>
-            <Link
-              href="#"
+            </button>
+            <button
+              type="button"
+              onClick={requestUnlock}
               className="inline-flex h-10 items-center justify-center rounded-full bg-white px-5 text-[13px] font-semibold text-primary-dark shadow-sm transition hover:bg-white/95"
             >
               Sign up
-            </Link>
+            </button>
           </div>
         </div>
       </motion.nav>

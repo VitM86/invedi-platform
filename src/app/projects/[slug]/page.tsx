@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import {
   getProject,
   projects,
-  formatPriceRange,
   formatRange,
+  priceRangeLabel,
   scoreToStars,
   type Project,
 } from "@/lib/mock-data";
@@ -204,7 +204,7 @@ function ProjectScoreSummary({ project }: { project: Project }) {
 
 function KeyFacts({ project }: { project: Project }) {
   const facts = [
-    { label: "Price range", value: formatPriceRange(project.priceMin, project.priceMax) },
+    { label: "Price range", value: priceRangeLabel(project) },
     { label: "Total units", value: `${project.totalUnits}` },
     { label: "Area range", value: formatRange(project.areaMin, project.areaMax, " m²") },
     { label: "Bedrooms", value: formatRange(project.bedroomsMin, project.bedroomsMax, " bed") },

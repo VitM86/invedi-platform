@@ -160,17 +160,26 @@ function Hero({ project, story }: { project: Project; story: ProjectStory }) {
           {stars >= 1 && (
             <div className="mt-4 flex items-center gap-3">
               <InvediStars stars={stars} size="lg" />
-              <span className="text-sm font-medium text-white/85">Assessed by Invedi</span>
+              <span className="text-sm font-medium text-white/85">
+                Assessed by Invedi{project.review.preliminary ? " · Preliminary" : ""}
+              </span>
             </div>
           )}
 
-          {/* From price — one line, small label + full amount (global €715.000 format). */}
-          <p className="mt-4 flex items-baseline gap-2.5 text-white">
-            <span className="text-[13px] font-medium uppercase tracking-[0.14em] text-white/70">From</span>
-            <span className="text-[26px] font-light leading-none sm:text-[30px]" style={SERIF}>
-              {formatPriceFull(project.priceMin)}
-            </span>
-          </p>
+          {/* From price — one line, small label + full amount (global €715.000 format).
+              Price-on-request projects show the label line without an amount. */}
+          {project.priceOnRequest ? (
+            <p className="mt-4 text-[24px] font-light leading-none text-white sm:text-[27px]" style={SERIF}>
+              Price on request
+            </p>
+          ) : (
+            <p className="mt-4 flex items-baseline gap-2.5 text-white">
+              <span className="text-[13px] font-medium uppercase tracking-[0.14em] text-white/70">From</span>
+              <span className="text-[26px] font-light leading-none sm:text-[30px]" style={SERIF}>
+                {formatPriceFull(project.priceMin)}
+              </span>
+            </p>
+          )}
 
           <div className="mt-7">
             <SignupButton label="Sign up for full access" size="lg" />
@@ -220,7 +229,7 @@ function StarTeaser({ project }: { project: Project }) {
     <div className="rounded-2xl border p-7" style={{ borderColor: HAIRLINE, backgroundColor: "#ffffff" }}>
       {stars >= 1 && <InvediStars stars={stars} size="lg" />}
       <p className="mt-4 text-xl font-light leading-snug text-text" style={SERIF}>
-        Assessed by Invedi.
+        {project.review.preliminary ? "Preliminary assessment by Invedi." : "Assessed by Invedi."}
       </p>
       <p className="mt-2 text-sm leading-relaxed text-text-muted">
         The full analysis — scores, strengths and points of attention — is available after sign-up.
@@ -442,7 +451,9 @@ function SampleUnits({ project, story }: { project: Project; story: ProjectStory
               <div className="border-t p-6" style={{ borderColor: HAIRLINE }}>
                 <h3 className="text-xl font-light text-text" style={SERIF}>{u.name}</h3>
                 <p className="mt-1 text-sm text-text-muted">{u.sizeRange}</p>
-                <p className="mt-3 text-lg font-medium text-primary-dark">From {formatPriceFull(u.priceFrom)}</p>
+                <p className="mt-3 text-lg font-medium text-primary-dark">
+                  {u.priceFrom ? `From ${formatPriceFull(u.priceFrom)}` : "Price on request"}
+                </p>
               </div>
             </Reveal>
           ))}

@@ -43,7 +43,10 @@ function Slide({ src, alt, eager }: { src: string; alt: string; eager?: boolean 
   );
 }
 
-function Slideshow({ slides, intervalMs = 10000 }: { slides: HeroSlide[]; intervalMs?: number }) {
+/** Exported so other surfaces (e.g. the /story hero) can reuse the exact same crossfade
+ *  mechanism instead of building a second implementation. Renders only the crossfading image
+ *  stack — callers layer their own overlays/content on top. */
+export function Slideshow({ slides, intervalMs = 10000 }: { slides: HeroSlide[]; intervalMs?: number }) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
 

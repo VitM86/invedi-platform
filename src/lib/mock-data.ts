@@ -46,6 +46,9 @@ export interface ProjectReview {
    *  by `scoreToStars`; this number itself appears only inside the gated full analysis. */
   score: number;
   verdict: ReviewVerdict;
+  /** True while the assessment is preliminary (project still in development / developer under
+   *  review). Surfaces append a "Preliminary" label wherever the assessment is credited. */
+  preliminary?: boolean;
   /** Two-to-three-sentence neutral analytical summary explaining the score. */
   summary: string;
   /** Short positive points. Aim for 3. */
@@ -83,6 +86,61 @@ export function scoreToStars(score: number): 0 | 1 | 2 | 3 {
   return 0;
 }
 
+/**
+ * ProjectStory — the editorial "story" landing content rendered by /story/[slug]. Entirely
+ * hand-authored placeholder content (like `review`). OPTIONAL: only projects with a filled
+ * `story` get a story page and a card link to it. Adding/removing a story is pure data — the
+ * StoryTemplate renders any project from this object alone, so a fourth story needs zero template
+ * changes.
+ *
+ * // TODO(content): placeholder editorial, to be authored per project via admin later.
+ */
+export interface ProjectStory {
+  /** Giant serif statement line, also used in the hero and the statement-line section. */
+  tagline: string;
+  /** Hero status line, e.g. "Limited release — launching 2027". */
+  statusLine: string;
+  /** 2–3 sentence emotional intro paragraph. */
+  intro: string;
+  whyInvedi: {
+    heading: string;
+    /** 3–4 editorial paragraphs, first-person plural (we visited / we assessed). */
+    body: string[];
+    /** Signature — a seam for a guest curator later. */
+    curator: string;
+  };
+  /** 4–6 local image paths for the asymmetric editorial collage. */
+  collage: string[];
+  /** Optional hero slideshow. When present (≥2 slides) the story hero crossfades through these
+   *  in order — reusing the /v3 HeroBackground `Slideshow` mechanism — instead of showing the
+   *  single `collage[0]` still. Slide 1 should match `collage[0]` for a seamless first paint.
+   *  Absent → single-image hero (the default; other projects are unchanged). */
+  heroSlides?: { src: string; alt: string }[];
+  lifestyle: { heading: string; body: string; highlights: string[] };
+  /** Optional large lifestyle image paired with the amenities (a people-in-space shot once
+   *  sourced; see the photo shopping list). Falls back to a collage image if absent. */
+  lifestyleImage?: string;
+  /** Optional full-viewport cinematic image break (mid-page "moment"), with an optional serif
+   *  caption. Rendered with a slow parallax drift. */
+  fullBleed?: { image: string; caption?: string };
+  /** 2–3 teaser residences — reduced info only (name, size range, price from, image).
+   *  `priceFrom` absent → the project publishes no prices; cards show "Price on request". */
+  sampleUnits: { name: string; sizeRange: string; priceFrom?: number; image: string }[];
+  location: { body: string; distances: { label: string; distance: string }[] };
+  /** Region development arc — a short timeline of milestones, a neutral takeaway, and a strip of
+   *  three quantified proof points. All hand-authored placeholder. */
+  trajectory?: {
+    intro?: string;
+    milestones: { period: string; label: string }[];
+    takeaway: string;
+    stats: { value: string; label: string }[];
+  };
+  developer: { body: string; highlights: string[] };
+  /** Optional operator (hospitality / management brand running the amenities). If absent, the
+   *  developer trust block takes the full width gracefully. */
+  operator?: { name: string; body: string; highlights: string[] };
+}
+
 export interface Project {
   slug: string;
   name: string;
@@ -111,6 +169,8 @@ export interface Project {
    *  read as neutral independent assessments (Independer-style verdict) rather than vendor
    *  marketing. See `ProjectReview` for the shape. */
   review: ProjectReview;
+  /** Optional editorial story-landing content (/story/[slug]). Only some projects have one. */
+  story?: ProjectStory;
   trustNote: string;
 
   /** Placeholder narrative copy. */
@@ -120,6 +180,10 @@ export interface Project {
   /** Facts used across cards, filters and the project page. */
   completion: string; // display, e.g. "Q4 2026" or "Completed"
   completionYear: number | null; // null = ready now / completed
+  /** True when the developer publishes no prices. priceMin/priceMax are 0; every price surface
+   *  must show "Price on request" instead of amounts and price filters must not exclude the
+   *  project. Use `priceRangeLabel()` instead of formatting priceMin/priceMax directly. */
+  priceOnRequest?: boolean;
   priceMin: number;
   priceMax: number;
   areaMin: number;
@@ -231,6 +295,7 @@ type ProjectSeed = {
   tier: 1 | 2 | 3;
   isCurated: boolean;
   review: ProjectReview;
+  story?: ProjectStory;
   completion: string;
   completionYear: number | null;
   amenities: string[];
@@ -242,9 +307,342 @@ type ProjectSeed = {
   basePrice: number;
   baseArea: number;
   heroCount: number;
+  /** No public prices — see Project.priceOnRequest. */
+  priceOnRequest?: boolean;
+  /** Hand-authored units (e.g. named villas with real specs). When present, `unitCount` /
+   *  `basePrice` / `baseArea` are ignored and NO units are generated. */
+  customUnits?: Unit[];
 };
 
+/* ------------------------------------------------------------------ */
+/* Aldeia da Roca — hand-authored units (real developer specs)         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Eight villas, two typologies, per the developer's spec sheet. No public prices —
+ * price: 0 + the project-level `priceOnRequest` flag make every surface render
+ * "Price on request". Areas are gross private area; terraces separate.
+ * floor: 0 = whole-villa listing (the units table shows "—" instead of a floor).
+ */
+const ALDEIA_UNITS: Unit[] = [
+  ...(["A1", "A2", "A3", "A4"] as const).map((n) => ({
+    id: `villa-${n.toLowerCase()}`,
+    projectSlug: "aldeia-da-roca",
+    name: `Villa ${n}`,
+    type: "T4 villa",
+    floor: 0,
+    area: 284, // gross private area 284.4 m²; construction area 320.2 m²
+    bedrooms: 4,
+    bathrooms: 4,
+    price: 0, // price on request
+    status: "available" as UnitStatus,
+    energyLabel: "A",
+    terraceArea: 73,
+  })),
+  ...(["B5", "B6", "B7", "B8"] as const).map((n) => ({
+    id: `villa-${n.toLowerCase()}`,
+    projectSlug: "aldeia-da-roca",
+    name: `Villa ${n}`,
+    type: "T5 villa",
+    floor: 0,
+    area: 302, // gross private area 301.9 m²; construction area 342.1 m²
+    bedrooms: 5,
+    bathrooms: 5,
+    price: 0, // price on request
+    status: "available" as UnitStatus,
+    energyLabel: "A",
+    terraceArea: 83,
+  })),
+];
+
 const SEEDS: ProjectSeed[] = [
+  {
+    slug: "aldeia-da-roca",
+    name: "Aldeia da Roca",
+    developer: "Special Concepts",
+    country: "PT",
+    countryLabel: "Portugal",
+    region: "Cascais & Sintra",
+    regionId: "pt-cascais-sintra",
+    city: "Azóia, Sintra",
+    verified: true,
+    tier: 2,
+    isCurated: false,
+    review: {
+      score: 8.5,
+      verdict: "Recommended",
+      preliminary: true,
+      summary:
+        "Preliminary assessment — the architectural project is still in development and the developer profile is under Invedi review. What is already clear: eight villas inside the Sintra-Cascais Natural Park, one kilometre from Cabo da Roca, on protected land where new construction of this kind is nearly impossible to repeat. The location and the scarcity carry the case; pricing has not been published yet.",
+      strengths: [
+        "Protected natural-park setting one kilometre from Cabo da Roca — effectively unrepeatable",
+        "Only eight villas, each with private pool, garden and Atlantic views",
+        "Green architecture (green roofs, underfloor heating) aimed above the local standard",
+      ],
+      considerations: [
+        "Developer track record not yet verified — profile under Invedi review",
+        "Prices on request and project in development — terms may still move",
+      ],
+      criteria: [
+        { label: "Location", score: 9.5, note: "1 km from Cabo da Roca, inside a natural park, with ocean views." },
+        { label: "Price & quality", score: 8.0, note: "Spec reads premium; no public pricing yet to benchmark against." },
+        { label: "Developer track record", score: 7.5, note: "Special Concepts — profile under Invedi review." },
+        { label: "Exit & rental liquidity", score: 8.5, note: "Thin villa supply around Sintra-Cascais supports resale." },
+        { label: "Payment plans & terms", score: 7.5, note: "Terms not yet published; project in development phase." },
+        { label: "Uniqueness of project", score: 9.5, note: "Only 8 villas on protected park land at Europe's westernmost point." },
+      ],
+    },
+    story: {
+      tagline: "The last village before the Atlantic",
+      statusLine: "Private release — 8 villas only",
+      intro:
+        "Aldeia da Roca is eight villas in the village of Azóia, inside the Sintra-Cascais Natural Park, one kilometre from Cabo da Roca — the westernmost point of mainland Europe. The land around it is protected, which means what is being built here is, in practical terms, not going to be built again.",
+      whyInvedi: {
+        heading: "Why Invedi selected this project",
+        body: [
+          "We rarely feature a project this early. Aldeia da Roca is still an architectural project in development, the developer profile is under our review, and prices are on request — all of which we say plainly. We selected it anyway, because the setting does not come around twice.",
+          "Azóia sits inside the Sintra-Cascais Natural Park, a kilometre from Cabo da Roca and from Praia da Ursa, with around 300 days of sunshine a year. Because the surrounding land is protected, new construction here is nearly impossible to repeat — the eight villas being permitted is the exception, not the pattern.",
+          "The project itself is deliberately small: eight villas in a gated condominium, contemporary green architecture with green roofs, each villa with its own pool, garden and Atlantic views. Access is by a centrally controlled electric gate with individual access management; the shared spaces are a communal garden, a vegetable garden and a children's play area.",
+          "Two typologies make up the eight: four T4 villas of 284 m² gross private area with 73 m² of terraces, and four T5 villas of 302 m² with 83 m² of terraces, on plots from roughly 490 to 875 m². The specification reads considered rather than showy — microcement floors, lime-based natural paints, oak plank flooring in the bedrooms, Fabri kitchens with Siemens appliances, underfloor heating on both floors, and pool covers included with an optional heated-pool pack. One honest note: with the project in development, materials are subject to substitution at similar quality.",
+          "Our reservations are the honest ones for a project at this stage: the track record of Special Concepts is not yet verified, and with no public pricing the value case cannot be fully tested. That is why this assessment is marked preliminary — and why the two-star rating may move as the project firms up.",
+        ],
+        curator: "The Invedi Team",
+      },
+      heroSlides: [
+        { src: "/images/aldeia-da-roca/aldeia-6.jpg", alt: "Aldeia da Roca — villa with private pool among the pines" },
+        { src: "/images/aldeia-da-roca/aldeia-5.jpg", alt: "Aldeia da Roca — aerial view over the villas toward the Atlantic" },
+        { src: "/images/aldeia-da-roca/aldeia-2.jpg", alt: "Praia da Ursa at sunset, one kilometre from the village" },
+      ],
+      collage: [
+        "/images/aldeia-da-roca/aldeia-6.jpg",
+        "/images/aldeia-da-roca/aldeia-5.jpg",
+        "/images/aldeia-da-roca/aldeia-7.jpg",
+        "/images/aldeia-da-roca/aldeia-3.jpg",
+        "/images/aldeia-da-roca/aldeia-4.jpg",
+        "/images/aldeia-da-roca/aldeia-2.jpg",
+      ],
+      lifestyle: {
+        heading: "Daily life at the edge of the map",
+        body:
+          "The days here are organised by the park and the ocean: surf at Guincho and Praia da Adraga, golf at Oitavos, Quinta da Marinha, Penha Longa and Estoril, sailing out of Cascais Marina. International schools — TASIS Portugal, Carlucci American, King's College — are nearby, and Lisbon is within reach via the A5 and A16.",
+        highlights: [
+          "Golf at Oitavos, Quinta da Marinha, Penha Longa and Estoril",
+          "Surfing at Guincho and Praia da Adraga",
+          "TASIS Portugal, Carlucci American and King's College nearby",
+          "Cascais Marina a short drive away",
+          "Lisbon within reach via the A5 / A16",
+        ],
+      },
+      lifestyleImage: "/images/aldeia-da-roca/aldeia-3.jpg",
+      fullBleed: {
+        image: "/images/aldeia-da-roca/aldeia-2.jpg",
+        caption: "Praia da Ursa, one kilometre from the door.",
+      },
+      sampleUnits: [
+        { name: "Type A — T4 villas (A1–A4)", sizeRange: "284 m² + 73 m² terraces", image: "/images/aldeia-da-roca/aldeia-6.jpg" },
+        { name: "Type B — T5 villas (B5–B8)", sizeRange: "302 m² + 83 m² terraces", image: "/images/aldeia-da-roca/aldeia-7.jpg" },
+      ],
+      location: {
+        body:
+          "Azóia is the last village before the Atlantic — inside the Sintra-Cascais Natural Park, between the Sintra hills and the ocean, with Cabo da Roca and Praia da Ursa a kilometre away. Cascais and the coast road are a short drive; Lisbon connects via the A5 and A16.",
+        distances: [
+          { label: "Cabo da Roca", distance: "1 km" },
+          { label: "Praia da Ursa", distance: "1 km" },
+          { label: "Praia da Adraga", distance: "6 km" },
+          { label: "Guincho beach", distance: "8 km" },
+          { label: "Cascais Marina", distance: "15 km" },
+          { label: "Sintra", distance: "14 km" },
+          { label: "Lisbon (A5/A16)", distance: "40 km" },
+          { label: "Lisbon airport", distance: "45 min" },
+        ],
+      },
+      developer: {
+        // Honest under-review framing — no invented history. Verified facts only.
+        body:
+          "Special Concepts is the developer behind Aldeia da Roca. Their profile — delivery history, financial standing and references — is currently under Invedi review, and we will publish the assessment when it completes rather than repeat marketing claims in the meantime. Sales are currently run through Athena, Mercator and Porta da Frente.",
+        highlights: [
+          "Developer profile under Invedi review",
+          "Architectural project in development phase",
+          "Sales channels: Athena, Mercator, Porta da Frente",
+        ],
+      },
+      trajectory: {
+        intro: "The Sintra-Cascais coast has one defining fact: the land is protected. What that means:",
+        milestones: [
+          { period: "Since 1994", label: "Sintra-Cascais Natural Park protects the coastline between Sintra and Cascais." },
+          { period: "2000s–2010s", label: "Cascais and Sintra establish themselves with international buyers; buildable coastal land grows scarce." },
+          { period: "Today", label: "New construction inside the park is exceptional — supply is effectively capped by planning, not by demand." },
+        ],
+        takeaway:
+          "Around Cascais and Sintra, protected land — not demand — is the binding constraint. Projects permitted inside the park are the exception, which is precisely what underpins their long-term case.",
+        stats: [
+          { value: "1 km", label: "To Cabo da Roca" },
+          { value: "~300", label: "Days of sunshine a year" },
+          { value: "Protected", label: "Natural-park land" },
+        ],
+      },
+    },
+    completion: "In development",
+    completionYear: 2028, // filter bucket only ("2028+"); the display string stays "In development"
+    amenities: [
+      "Pool",
+      "Garden",
+      "Parking",
+      "Communal vegetable garden",
+      "Children's play area",
+      "Gated access",
+    ],
+    shortTermLetting: false,
+    pin: { x: 8, y: 60 },
+    lng: -9.4772,
+    lat: 38.7838,
+    unitCount: 8, // ignored — customUnits below
+    basePrice: 0,
+    baseArea: 0,
+    heroCount: 5,
+    priceOnRequest: true,
+    customUnits: ALDEIA_UNITS,
+  },
+  {
+    slug: "comporta-dunes",
+    name: "Comporta Dunes Residences",
+    developer: "Herdade Atlântica",
+    country: "PT",
+    countryLabel: "Portugal",
+    region: "Comporta & Melides",
+    regionId: "pt-comporta",
+    city: "Comporta",
+    verified: true,
+    tier: 3,
+    isCurated: true,
+    // TODO(content): placeholder editorial scores, to be replaced with real assessments.
+    review: {
+      score: 9.4,
+      verdict: "Recommended",
+      summary:
+        "Comporta Dunes is one of the strongest coastal entries we currently track. Protected dune and rice-paddy land structurally caps supply here, the developer's Alentejo delivery record is clean, and the restraint of the architecture should age well. It is not cheap, but for genuinely scarce Atlantic land the case is defensible.",
+      strengths: [
+        "Structurally supply-constrained location — protected dune and paddy land",
+        "Verified developer with an on-time Alentejo delivery record",
+        "Low-density, single-storey architecture designed to weather rather than date",
+      ],
+      considerations: [
+        "Q2 2027 delivery rewards holding, not a quick resale",
+        "Entry pricing reflects the scarcity — premium, though defensible",
+      ],
+      criteria: [
+        { label: "Location", score: 9.5, note: "Protected Comporta dune belt; a four-minute walk to an unspoilt Atlantic beach." },
+        { label: "Price vs area", score: 8.5, note: "A scarcity premium, but in line with genuinely limited coastal land." },
+        { label: "Developer track record", score: 9.0, note: "Herdade Atlântica: two prior Alentejo schemes delivered on time." },
+        { label: "Build quality & energy", score: 9.0, note: "Passive-first design, natural materials, A-rated energy spec." },
+        { label: "Liquidity & resale", score: 9.0, note: "Thin supply and durable demand support resale in a patient market." },
+      ],
+    },
+    story: {
+      tagline: "Where the pines meet the Atlantic",
+      statusLine: "Limited release — launching 2027",
+      intro:
+        "Set between umbrella pines and the open Atlantic, Comporta Dunes is a quiet counterpoint to the Algarve's crowds. Low, sand-toned villas sit lightly on the dunes; the ocean is a four-minute walk through the trees. This is the Comporta that architects and gallerists have kept to themselves for a decade.",
+      whyInvedi: {
+        heading: "Why Invedi selected this project",
+        body: [
+          "We visit every project we choose to feature, and Comporta Dunes is one of the few that reads better in person than on paper. We walked the site at low sun with the developer's project lead, and what stood out was restraint — single-storey volumes, nothing taller than the pines, materials chosen to weather rather than date.",
+          "We spoke at length with Herdade Atlântica about delivery. Their two previous Alentejo schemes completed on schedule and are holding value on resale, which is rare for the region. Planning permits are in place and the sales mandate is clean — both of which we verified directly rather than taking on trust.",
+          "On the numbers, Comporta remains structurally supply-constrained: protected dune and rice-paddy land caps how much can ever be built here. We think that scarcity, more than any single amenity, is what underpins the case. The pricing is not cheap, but for genuinely limited coastal land it is defensible.",
+          "Our one reservation is patience. This is a 2027 delivery in a market that rewards holding, not flipping. If you need liquidity inside three years, this is not the project. If you are buying the place, it is one of the strongest coastal entries we track.",
+        ],
+        curator: "The Invedi Team",
+      },
+      // Hero slideshow: the existing still first (matches collage[0]), then two new Comporta
+      // villa renders. Crossfades every 10s via the shared HeroBackground Slideshow.
+      heroSlides: [
+        { src: "/images/exterior-2.jpg", alt: "Comporta Dunes — modern villa among the pines" },
+        { src: "/images/story/comporta-dunes-hero2.jpg", alt: "Comporta Dunes — glass villa and pool terrace" },
+        { src: "/images/story/comporta-dunes-hero3.jpg", alt: "Comporta Dunes — poolside courtyard living" },
+      ],
+      collage: [
+        // collage[0] is also the story hero. A low-rise modern villa in a warm, dune-like natural
+        // setting fits Comporta's character far better than the empty-beach shot.
+        "/images/exterior-2.jpg",
+        // Two new Comporta interior/exterior renders replace the earlier empty-sand shots.
+        "/images/story/comporta-dunes.jpg",
+        "/images/story/comporta-dunes2.jpg",
+        "/images/regions/pt-algarve.jpg",
+        "/images/gallery2.jpg",
+        "/images/regions/pt-cascais-sintra.jpg",
+      ],
+      lifestyle: {
+        heading: "A slower kind of coast",
+        body:
+          "Life here is organised around the walk to the beach and the light coming back through the pines. The shared spaces are deliberately understated — a garden that runs into the dune landscape, a spa built for after the sea rather than instead of it, a pool that sits below the treeline.",
+        highlights: [
+          "1,500 m² of communal pine gardens",
+          "Four-minute walk to an unspoilt Atlantic beach",
+          "Outdoor spa and 25 m saltwater pool",
+          "On-site concierge and beach service",
+          "Secure parking and EV charging",
+        ],
+      },
+      sampleUnits: [
+        { name: "Two-bedroom dune residences", sizeRange: "96–128 m²", priceFrom: 685000, image: "/images/gallery1.jpg" },
+        { name: "Three-bedroom pine villas", sizeRange: "142–176 m²", priceFrom: 1150000, image: "/images/gallery2.jpg" },
+        { name: "Four-bedroom Atlantic villas", sizeRange: "205–240 m²", priceFrom: 1980000, image: "/images/gallery3.jpg" },
+      ],
+      location: {
+        body:
+          "Comporta sits an hour south of Lisbon, across the Sado estuary — close enough for a weekend, far enough to feel like elsewhere. Everything day-to-day is a short drive; everything else is a walk.",
+        distances: [
+          { label: "Atlantic beach", distance: "400 m" },
+          { label: "Comporta village", distance: "1.2 km" },
+          { label: "Comporta beach club", distance: "2.5 km" },
+          { label: "Melides", distance: "18 km" },
+          { label: "Grândola", distance: "22 km" },
+          { label: "Troia ferry", distance: "28 km" },
+          { label: "Lisbon (drive)", distance: "1 h 10" },
+          { label: "Lisbon airport", distance: "1 h 20" },
+        ],
+      },
+      developer: {
+        body:
+          "Herdade Atlântica is an Alentejo developer with a decade of low-density coastal work behind it. Their approach is unusually patient for the sector — small releases, long build windows, and a preference for landscape architects over marketing. Two prior schemes delivered on time and are holding value on resale.",
+        highlights: ["10+ years in the Alentejo", "2 coastal schemes delivered", "On-time delivery record"],
+      },
+      operator: {
+        name: "Atlântica Living",
+        body:
+          "The estate is run by Atlântica Living, the developer's in-house hospitality and management arm. They handle the spa, concierge and beach service, and — for owners who want it — a managed rental programme for the weeks a residence sits empty.",
+        highlights: ["Estate & rental management", "On-site concierge and spa", "8 properties under management"],
+      },
+      trajectory: {
+        intro: "Comporta has changed slowly, and on purpose. The short version:",
+        milestones: [
+          { period: "2015–2019", label: "Discovered by architects, designers and a quiet creative set." },
+          { period: "2020–2024", label: "Flagship hospitality and design-led estates arrive." },
+          { period: "2025 onward", label: "Protected coastline; new supply released slowly, in small numbers." },
+        ],
+        takeaway:
+          "Comporta sits early in a long, deliberately slow build-out — the scarcity here is a planning fact, not a sales line.",
+        stats: [
+          { value: "1h15", label: "From Lisbon" },
+          { value: "Protected", label: "Natural reserve coastline" },
+          { value: "12", label: "Hospitality openings since 2020" },
+        ],
+      },
+      fullBleed: { image: "/images/landing/hero-comporta.jpg", caption: "The dunes, four minutes from the door." },
+      lifestyleImage: "/images/regions/pt-comporta.jpg",
+    },
+    completion: "Q2 2027",
+    completionYear: 2027,
+    amenities: ["Pool", "Spa", "Garden", "Concierge", "Parking"],
+    shortTermLetting: true,
+    pin: { x: 12, y: 62 },
+    lng: -8.792,
+    lat: 38.3803,
+    unitCount: 5,
+    basePrice: 620000,
+    baseArea: 90,
+    heroCount: 5,
+  },
   {
     slug: "maple-court",
     name: "Maple Court",
@@ -373,6 +771,87 @@ const SEEDS: ProjectSeed[] = [
         { label: "Liquidity & resale", score: 8.5, note: "Short-term-let permission widens the buyer pool." },
       ],
     },
+    story: {
+      tagline: "Mornings that smell of sea and citrus",
+      statusLine: "Now selling — first release",
+      intro:
+        "Olive Grove sits where the Costa Blanca stops being a postcard and starts being a place to live. Terraced apartments open onto shared gardens of olive and citrus; the Mediterranean is fifteen minutes down the hill. It is built for the long, slow Alicante year, not just the summer.",
+      whyInvedi: {
+        heading: "Why Invedi selected this project",
+        body: [
+          "We assessed Olive Grove against every other Costa Blanca entry we currently track, and it came out at the top of the group. We met Mediterra Estates on site and reviewed their delivery history line by line — a clean, multi-cycle record that is more the exception than the rule on this coast.",
+          "The amenity programme is where the value shows. A genuine spa, a proper gym and a resort-grade pool at this entry price is unusual, and it is the kind of thing that protects resale value long after the first owners move on.",
+          "Alicante's rental market holds up year-round rather than collapsing out of season, and short-term letting here is permitted — so the yield case is real, not theoretical. That combination is why this is the sole three-star project in our current set.",
+          "Our one reservation is time: delivery is Q1 2028, a longer wait than some peers. For a buyer who can hold, we think the wait is worth it.",
+        ],
+        curator: "The Invedi Team",
+      },
+      collage: [
+        "/images/regions/es-costa-blanca.jpg",
+        "/images/gallery3.jpg",
+        "/images/regions/es-costa-del-sol.jpg",
+        "/images/gallery4.jpg",
+        "/images/landing/hero-marbella.jpg",
+        "/images/gallery5.jpg",
+      ],
+      lifestyle: {
+        heading: "Resort living, priced for real life",
+        body:
+          "The shared spaces do the heavy lifting: a spa and gym for the off-season, gardens that stay green year-round, and a pool that anchors the summer. It is the amenity mix of a resort at the price of an apartment.",
+        highlights: [
+          "Resort-grade outdoor pool",
+          "Full spa and fitness suite",
+          "Landscaped olive-and-citrus gardens",
+          "Secure residents' parking",
+          "Short-term letting permitted",
+        ],
+      },
+      sampleUnits: [
+        { name: "One-bedroom garden apartments", sizeRange: "62–74 m²", priceFrom: 295000, image: "/images/gallery3.jpg" },
+        { name: "Two-bedroom terraces", sizeRange: "88–110 m²", priceFrom: 420000, image: "/images/gallery4.jpg" },
+        { name: "Three-bedroom penthouses", sizeRange: "126–150 m²", priceFrom: 680000, image: "/images/gallery5.jpg" },
+      ],
+      location: {
+        body:
+          "Set in the hills above Alicante, Olive Grove keeps the coast close and the city closer — beaches, marina and old town are all a short drive, with the airport under half an hour away.",
+        distances: [
+          { label: "Nearest beach", distance: "4.5 km" },
+          { label: "Alicante centre", distance: "12 km" },
+          { label: "Marina & port", distance: "13 km" },
+          { label: "Golf course", distance: "6 km" },
+          { label: "Santa Pola", distance: "18 km" },
+          { label: "Alicante airport", distance: "22 km" },
+        ],
+      },
+      developer: {
+        body:
+          "Mediterra Estates has built along the Costa Blanca for over two decades, with a delivery record we were able to verify across several completed schemes. Their programmes lean amenity-heavy and finish above local code — a profile that has held resale value well.",
+        highlights: ["20+ years on the Costa Blanca", "Verified delivery record", "Above-code build spec"],
+      },
+      operator: {
+        name: "Mediterra Hospitality",
+        body:
+          "Day-to-day, the resort amenities are run by Mediterra Hospitality, the developer's operations team. They keep the spa, pool and gardens running year-round and offer owners an optional short-let and concierge programme.",
+        highlights: ["Spa & wellness operations", "Optional short-let programme", "Year-round on-site team"],
+      },
+      trajectory: {
+        intro: "The Costa Blanca has moved from volume to quality. Where it's heading:",
+        milestones: [
+          { period: "2012–2018", label: "Steady international demand returns after the downturn." },
+          { period: "2019–2024", label: "Branded, amenity-led new-builds raise the local benchmark." },
+          { period: "2025 onward", label: "Prime coastal plots tighten; premium supply stays limited." },
+        ],
+        takeaway:
+          "Alicante's premium segment is maturing rather than peaking — steady demand against thinning prime supply.",
+        stats: [
+          { value: "22 km", label: "To Alicante airport" },
+          { value: "Year-round", label: "Rental demand" },
+          { value: "320+", label: "Days of sun a year" },
+        ],
+      },
+      fullBleed: { image: "/images/landing/hero-marbella.jpg", caption: "Fifteen minutes from the Mediterranean." },
+      lifestyleImage: "/images/regions/es-costa-del-sol.jpg",
+    },
     completion: "Q1 2028",
     completionYear: 2028,
     amenities: ["Pool", "Gym", "Spa", "Garden", "Parking"],
@@ -464,6 +943,84 @@ const SEEDS: ProjectSeed[] = [
         { label: "Build quality & energy", score: 8.0, note: "Energy label A throughout; reasonable insulation spec." },
         { label: "Liquidity & resale", score: 7.0, note: "No short-term-let permit narrows the resale audience." },
       ],
+    },
+    story: {
+      tagline: "The river, the light, and the city just above",
+      statusLine: "Final phase — delivering 2027",
+      intro:
+        "Douro Terraces steps down the valley toward the river, every apartment turned to the water and the evening light. Porto's old centre is a walk up the hill; the Douro is a glass of wine away. It is a project about a view, and about a city that has quietly become one of Europe's best places to own.",
+      whyInvedi: {
+        heading: "Why Invedi selected this project",
+        body: [
+          "We chose Douro Terraces as our default recommendation for a Porto-area buyer, and the site visit confirmed it. Atlantic Homes walked us through the build with the confidence of a developer that has delivered three Porto schemes on time — a track record we verified independently.",
+          "The location does most of the work. River-valley views this close to the centre are genuinely scarce, and the walkable access to the old town means the flat works as a home, a rental, or both.",
+          "The amenity mix — concierge, gym, roof terrace, EV charging — is appropriate rather than show-off, which we prefer. It reads as a project that spent its budget on the building, not the brochure.",
+          "Our reservation is investor-specific: short-term letting is not permitted here, which narrows the resale audience. For an owner-occupier or a long-let landlord, that is a non-issue.",
+        ],
+        curator: "The Invedi Team",
+      },
+      collage: [
+        "/images/regions/pt-porto-douro.jpg",
+        "/images/gallery2.jpg",
+        "/images/regions/pt-lisbon.jpg",
+        "/images/gallery1.jpg",
+        "/images/landing/hero-lisbon.jpg",
+        "/images/gallery4.jpg",
+      ],
+      lifestyle: {
+        heading: "A city built for walking, and staying in",
+        body:
+          "The building is organised around the view and the roof: a terrace for the long Porto evenings, a concierge for the practical side of ownership, and a gym for the days you don't feel like the hills. Everything else is a walk away.",
+        highlights: [
+          "Rooftop terrace over the Douro valley",
+          "Resident concierge",
+          "Fitness suite",
+          "EV charging and secure parking",
+          "Energy label A throughout",
+        ],
+      },
+      sampleUnits: [
+        { name: "One-bedroom river apartments", sizeRange: "58–72 m²", priceFrom: 310000, image: "/images/gallery2.jpg" },
+        { name: "Two-bedroom terraces", sizeRange: "84–104 m²", priceFrom: 465000, image: "/images/gallery1.jpg" },
+        { name: "Three-bedroom duplexes", sizeRange: "128–150 m²", priceFrom: 720000, image: "/images/gallery4.jpg" },
+      ],
+      location: {
+        body:
+          "Douro Terraces sits on the valley side just below the historic centre — the river at the foot of the hill, the old town at the top, and everything in between within a short walk.",
+        distances: [
+          { label: "Douro riverside", distance: "600 m" },
+          { label: "Metro", distance: "700 m" },
+          { label: "Historic centre", distance: "1.4 km" },
+          { label: "São Bento station", distance: "1.8 km" },
+          { label: "Ribeira", distance: "2 km" },
+          { label: "Foz beaches", distance: "6 km" },
+          { label: "Porto airport", distance: "13 km" },
+        ],
+      },
+      developer: {
+        body:
+          "Atlantic Homes Lda. is a Porto developer with three completed schemes in the metro area, all delivered on schedule. Their work is characterised by restrained, view-led design and an energy spec that runs at label A across the board.",
+        highlights: ["3 Porto schemes delivered", "On-time delivery record", "Energy label A throughout"],
+      },
+      // No operator here — Douro is owner-occupier led (short-term letting isn't permitted), so
+      // the developer trust block below takes the full width. Demonstrates the graceful fallback.
+      trajectory: {
+        intro: "Porto's decade of regeneration, in three chapters:",
+        milestones: [
+          { period: "2013–2018", label: "Porto emerges as a design and food destination; regeneration begins." },
+          { period: "2019–2024", label: "Riverfront renewal and new-build quality accelerate." },
+          { period: "2025 onward", label: "Central river-view plots are scarce; delivery pipelines lengthen." },
+        ],
+        takeaway:
+          "Porto's centre has re-rated over a decade; river-view supply is now the binding constraint.",
+        stats: [
+          { value: "13 km", label: "To Porto airport" },
+          { value: "UNESCO", label: "World Heritage centre" },
+          { value: "600 m", label: "To the Douro riverside" },
+        ],
+      },
+      fullBleed: { image: "/images/regions/pt-porto-douro.jpg", caption: "The river at the foot of the hill." },
+      lifestyleImage: "/images/gallery1.jpg",
     },
     completion: "Q3 2027",
     completionYear: 2027,
@@ -618,13 +1175,9 @@ const SEEDS: ProjectSeed[] = [
 ];
 
 function buildProject(seed: ProjectSeed): Project {
-  const units = makeUnits(
-    seed.slug,
-    seed.country,
-    seed.unitCount,
-    seed.basePrice,
-    seed.baseArea,
-  );
+  const units =
+    seed.customUnits ??
+    makeUnits(seed.slug, seed.country, seed.unitCount, seed.basePrice, seed.baseArea);
   const prices = units.map((u) => u.price);
   const areas = units.map((u) => u.area);
   const beds = units.map((u) => u.bedrooms);
@@ -641,6 +1194,7 @@ function buildProject(seed: ProjectSeed): Project {
     tier: seed.tier,
     isCurated: seed.isCurated,
     review: seed.review,
+    story: seed.story,
     trustNote: seed.verified
       ? "Placeholder trust note. Verified projects pass Invedi's listing checks (developer identity, planning permits, sales mandate). Exact criteria are TBD."
       : "Placeholder note. This project is not yet verified — developer consent and document checks are pending.",
@@ -648,8 +1202,9 @@ function buildProject(seed: ProjectSeed): Project {
     neighbourhood: PLACEHOLDER_NEIGHBOURHOOD,
     completion: seed.completion,
     completionYear: seed.completionYear,
-    priceMin: Math.min(...prices),
-    priceMax: Math.max(...prices),
+    priceOnRequest: seed.priceOnRequest,
+    priceMin: seed.priceOnRequest ? 0 : Math.min(...prices),
+    priceMax: seed.priceOnRequest ? 0 : Math.max(...prices),
     areaMin: Math.min(...areas),
     areaMax: Math.max(...areas),
     bedroomsMin: Math.min(...beds),
@@ -762,7 +1317,8 @@ export function regionsForCountries(codes: CountryCode[]): string[] {
 export function priceHistogram(floor: number, ceil: number, buckets = 30) {
   const width = (ceil - floor) / buckets;
   const real = new Array(buckets).fill(0);
-  for (const p of projects) {
+  // Price-on-request projects have no meaningful midpoint — they stay out of the histogram.
+  for (const p of projects.filter((x) => !x.priceOnRequest)) {
     const mid = (p.priceMin + p.priceMax) / 2;
     const i = Math.min(buckets - 1, Math.max(0, Math.floor((mid - floor) / width)));
     real[i]++;
@@ -1029,6 +1585,12 @@ export function formatPriceFull(eur: number): string {
 /** Range form of formatPriceFull. Equal min/max collapses to a single amount. */
 export function formatPriceRangeFull(min: number, max: number): string {
   return min === max ? formatPriceFull(min) : `${formatPriceFull(min)} – ${formatPriceFull(max)}`;
+}
+
+/** The ONE way to render a project's price range — returns "Price on request" for projects
+ *  that publish no prices, the formatted range otherwise. */
+export function priceRangeLabel(p: Project): string {
+  return p.priceOnRequest ? "Price on request" : formatPriceRangeFull(p.priceMin, p.priceMax);
 }
 
 /**

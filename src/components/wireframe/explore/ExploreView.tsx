@@ -25,8 +25,9 @@ function matchesFilters(p: (typeof projects)[number], f: Filters): boolean {
   if (f.countries.length > 0 && !f.countries.includes(p.country)) return false;
   if (f.regions.length > 0 && !f.regions.includes(p.region)) return false;
 
-  // Price: project range must overlap the selected [min, max] band.
-  if (p.priceMax < f.priceMin || p.priceMin > f.priceMax) return false;
+  // Price: project range must overlap the selected [min, max] band. Price-on-request projects
+  // have no comparable numbers — the price filter never excludes them.
+  if (!p.priceOnRequest && (p.priceMax < f.priceMin || p.priceMin > f.priceMax)) return false;
 
   // Bedrooms / area are "at least" filters against the project's top of range.
   if (f.bedrooms > 0 && p.bedroomsMax < f.bedrooms) return false;

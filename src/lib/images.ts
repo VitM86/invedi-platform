@@ -40,6 +40,19 @@ export const EXTERIOR_IMAGES = [
   "/images/buildings/building-09.jpeg",
 ];
 
+/** Per-project real image sets. Projects listed here bypass the generic exterior/interior
+ *  pools entirely — cards and carousels show the project's own (licensed) shots, exterior
+ *  first. Everything else keeps the deterministic placeholder behaviour below. */
+const PROJECT_IMAGE_OVERRIDES: Record<string, string[]> = {
+  "aldeia-da-roca": [
+    "/images/aldeia-da-roca/aldeia-6.jpg", // villa exterior with pool — lead shot
+    "/images/aldeia-da-roca/aldeia-5.jpg", // aerial over the villas toward the Atlantic
+    "/images/aldeia-da-roca/aldeia-7.jpg", // interior — kitchen and stair screen
+    "/images/aldeia-da-roca/aldeia-2.jpg", // Praia da Ursa at sunset
+    "/images/aldeia-da-roca/aldeia-3.jpg", // Sintra forest
+  ],
+};
+
 /** Stable hash from a string so image selection is deterministic. */
 function hash(str: string): number {
   let h = 0;
@@ -57,11 +70,13 @@ function extHash(str: string): number {
 
 /** The deterministic exterior for a project (index 0 of its images + its card thumbnail). */
 export function projectExterior(seed: string): string {
-  return EXTERIOR_IMAGES[extHash(seed) % EXTERIOR_IMAGES.length];
+  return PROJECT_IMAGE_OVERRIDES[seed]?.[0] ?? EXTERIOR_IMAGES[extHash(seed) % EXTERIOR_IMAGES.length];
 }
 
 /** `count` image paths for a project: exterior first, then a rotated run of interiors. */
 export function projectImages(seed: string, count = 5): string[] {
+  const override = PROJECT_IMAGE_OVERRIDES[seed];
+  if (override) return override.slice(0, Math.max(1, count));
   const exterior = projectExterior(seed);
   const start = hash(seed) % GALLERY_IMAGES.length;
   const interiors = Array.from({ length: Math.max(0, count - 1) }, (_, i) =>

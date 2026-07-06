@@ -90,12 +90,12 @@ export default async function UnitPage({
               </div>
 
               <p className="mb-3 text-sm text-text-muted">
-                {project.name} · Floor {unit.floor} · {project.city}, {project.countryLabel}
+                {project.name} · {unit.floor > 0 ? `Floor ${unit.floor}` : unit.type} · {project.city}, {project.countryLabel}
               </p>
 
               <div className="mb-4">
                 <span className="text-4xl font-semibold text-primary-dark">
-                  {formatPriceFull(unit.price)}
+                  {unit.price > 0 ? formatPriceFull(unit.price) : "Price on request"}
                 </span>
               </div>
 
@@ -106,7 +106,7 @@ export default async function UnitPage({
                 <Chip icon="bed" label={`${unit.bedrooms} bedrooms`} />
                 <Chip icon="bath" label={`${unit.bathrooms} bathrooms`} />
                 <Chip icon="area" label={`${unit.area} m²`} />
-                <Chip icon="floors" label={`Floor ${unit.floor}`} />
+                {unit.floor > 0 && <Chip icon="floors" label={`Floor ${unit.floor}`} />}
                 {unit.balconyArea && <Chip icon="balcony" label={`${unit.balconyArea} m² balcony`} />}
                 {unit.terraceArea && <Chip icon="terrace" label={`${unit.terraceArea} m² terrace`} />}
               </div>
@@ -137,13 +137,16 @@ export default async function UnitPage({
             </div>
           </section>
 
-          {/* Mortgage calculator (buyer-side tool) + advisor card */}
+          {/* Mortgage calculator (buyer-side tool) + advisor card. Price-on-request units have
+              no number to calculate against — the widget is hidden, the advisor card stays. */}
           <section className="mb-10 grid grid-cols-1 items-start gap-8 lg:grid-cols-2">
-            <MortgageWidget
-              propertyPrice={unit.price}
-              country={project.country}
-              energyLabel={unit.energyLabel}
-            />
+            {unit.price > 0 && (
+              <MortgageWidget
+                propertyPrice={unit.price}
+                country={project.country}
+                energyLabel={unit.energyLabel}
+              />
+            )}
             <AdvisorCard />
           </section>
         </main>

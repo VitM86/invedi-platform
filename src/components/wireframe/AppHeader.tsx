@@ -30,10 +30,14 @@
  * only on platform surfaces — account UI surfaces inside flows, not in the chrome.
  */
 
+"use client";
+
 import Link from "next/link";
 import { LogoImage } from "./LogoImage";
+import { useUnlock } from "./UnlockProvider";
 
 export function AppHeader() {
+  const { requestUnlock, requestSignIn } = useUnlock();
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background">
       <div className="grid h-full grid-cols-3 items-center px-10 sm:px-12 lg:px-14">
@@ -61,22 +65,23 @@ export function AppHeader() {
           </Link>
         </div>
 
-        {/* Right: Login (secondary text-link) + Sign up (primary filled pill). Both point at
-            placeholder routes; real auth is out of scope. TODO(link): once the real
-            login + sign-up flow exists, point these there. */}
+        {/* Right: Login (opens the Sign in popup) + Sign up (opens the qualification popup).
+            Both share the session-wide flows from UnlockProvider. */}
         <div className="flex items-center justify-end gap-3">
-          <Link
-            href="#"
+          <button
+            type="button"
+            onClick={requestSignIn}
             className="hidden text-[13px] font-semibold text-text-muted transition-colors hover:text-text sm:inline-flex"
           >
             Login
-          </Link>
-          <Link
-            href="#"
+          </button>
+          <button
+            type="button"
+            onClick={requestUnlock}
             className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-primary-hover"
           >
             Sign up
-          </Link>
+          </button>
         </div>
       </div>
     </header>

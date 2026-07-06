@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import { LogoImage } from "./LogoImage";
 
 type FooterLink = [label: string, href: string | null];
 
@@ -77,12 +78,12 @@ export function SiteFooter({ showSocials = false }: { showSocials?: boolean } = 
       <div className="mx-auto max-w-[1440px] px-6 py-12 lg:px-10 lg:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
-            <Link
-              href="/"
-              className="text-2xl font-extrabold tracking-tight text-primary"
-              aria-label="Invedi — home"
-            >
-              Invedi
+            <Link href="/" aria-label="Invedi — home" className="inline-flex items-center">
+              <LogoImage
+                src="/images/logo-dark.png"
+                className="h-8 w-auto"
+                fallbackColorClass="text-primary-dark"
+              />
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-text-muted">
               Curated, data-rich infrastructure for new-build developments in Europe — starting in

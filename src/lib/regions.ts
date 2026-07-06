@@ -207,5 +207,6 @@ export function formatPriceM(eur: number): string {
 
 /** @deprecated alias for {@link formatPriceRangeFull}. New code should import directly. */
 export function formatPriceRangeM(from: number, to: number): string {
-  return formatPriceRangeFull(from, to);
+  // 0/0 = price-on-request project (see Project.priceOnRequest) — no numbers to show.
+  return from === 0 && to === 0 ? "Price on request" : formatPriceRangeFull(from, to);
 }
