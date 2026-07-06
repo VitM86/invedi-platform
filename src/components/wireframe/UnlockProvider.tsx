@@ -7,29 +7,58 @@
  * so it also survives a reload within the same tab. Because it lives at the root, unlocking on ANY
  * project unlocks EVERY project and every gated section for the rest of the session.
  *
- * The gate is now a qualification step: `requestUnlock()` opens the shared QualificationModal
- * (rendered once here); completing it flips the flag and stores the answers in session state.
+ * The gate is a single-screen signup form (SignupModal, replaced the old 5-step wizard per
+ * founder feedback): `requestUnlock()` opens it; submitting flips the flag and stores the
+ * profile (first name, last name, email, role) in session state — the homepage hero uses it
+ * for the personalised greeting.
  *
- * This is NOT auth. No validation, no backend, no real capture — the qualification answers are
- * mocked and session-only.
+ * Entry points can pass a variant + preselected role (e.g. the homepage role cards); plain
+ * `requestUnlock()` (or `onClick={requestUnlock}` — the MouseEvent arg is ignored) opens the
+ * default buyer form.
+ *
+ * This is NOT auth. No validation beyond the form's own, no backend, no real capture.
  */
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { QualificationModal, type QualificationAnswers } from "./QualificationModal";
+import { SignupModal } from "./SignupModal";
+import type { RegistrationData, RegistrationVariant } from "./RegistrationForm";
+import { SignInModal } from "./SignInModal";
 
 const STORAGE_KEY = "invedi:units-unlocked";
-// TODO(data): qualification answers, backend later.
-const ANSWERS_KEY = "invedi:qualification";
+// TODO(data): profile goes to a backend later.
+const PROFILE_KEY = "invedi:profile";
+const EMAIL_KEY = "invedi:signed-in-email";
+
+/** Mock session profile captured at signup. Session-only. */
+export type SessionProfile = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** The "Who are you" answer, e.g. "Buyer / Investor". */
+  role: string;
+};
+
+export type UnlockRequestOptions = {
+  /** Which form variant to open. Defaults to "buyer". */
+  variant?: RegistrationVariant;
+  /** Preselect the "Who are you" toggle (stays editable). */
+  who?: string;
+};
 
 type UnlockValue = {
   unlocked: boolean;
-  /** Open the shared qualification form. Completing it unlocks the whole session. No-op if
+  /** Open the shared signup form. Completing it unlocks the whole session. No-op if already
+   *  unlocked. Takes UnlockRequestOptions; typed `unknown` so it can also be passed straight
+   *  as onClick (a MouseEvent arg is detected and ignored). */
+  requestUnlock: (opts?: UnlockRequestOptions | unknown) => void;
+  /** Open the shared Sign in popup. Signing in unlocks the whole session (mocked). No-op if
    *  already unlocked. */
-  requestUnlock: () => void;
-  /** DEMO ONLY — re-lock the session and clear stored answers so a demo can start over. */
+  requestSignIn: () => void;
+  /** DEMO ONLY — re-lock the session and clear the stored profile so a demo can start over. */
   relock: () => void;
-  /** Qualification answers captured at unlock. Session-only, mocked. */
-  answers: QualificationAnswers | null;
+  /** Profile captured at signup (null when anonymous or signed in via the mocked Sign in,
+   *  which only collects an email). */
+  profile: SessionProfile | null;
 };
 
 const UnlockContext = createContext<UnlockValue | null>(null);
@@ -40,62 +69,115 @@ export function useUnlock(): UnlockValue {
   return ctx;
 }
 
+type SignupRequest = { variant: RegistrationVariant; who?: string };
+
 export function UnlockProvider({ children }: { children: React.ReactNode }) {
   // Start locked on both server and first client render (avoids hydration mismatch); then read
   // sessionStorage after mount to restore a prior unlock on hard reload.
   const [unlocked, setUnlocked] = useState(false);
-  const [qualifying, setQualifying] = useState(false);
-  const [answers, setAnswers] = useState<QualificationAnswers | null>(null);
+  const [signup, setSignup] = useState<SignupRequest | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
+  const [profile, setProfile] = useState<SessionProfile | null>(null);
 
   useEffect(() => {
     try {
       if (sessionStorage.getItem(STORAGE_KEY) === "1") setUnlocked(true);
-      const raw = sessionStorage.getItem(ANSWERS_KEY);
-      if (raw) setAnswers(JSON.parse(raw) as QualificationAnswers);
+      const raw = sessionStorage.getItem(PROFILE_KEY);
+      if (raw) setProfile(JSON.parse(raw) as SessionProfile);
     } catch {
       /* sessionStorage unavailable (private mode etc.) — gate just won't persist across reloads */
     }
   }, []);
 
-  const requestUnlock = useCallback(() => {
-    if (!unlocked) setQualifying(true);
+  const requestUnlock = useCallback(
+    (opts?: unknown) => {
+      if (unlocked) return;
+      // Guard: callers pass this straight as onClick, so `opts` may be a MouseEvent.
+      const o =
+        opts && typeof opts === "object" && ("variant" in opts || "who" in opts)
+          ? (opts as UnlockRequestOptions)
+          : undefined;
+      setSigningIn(false);
+      setSignup({ variant: o?.variant ?? "buyer", who: o?.who });
+    },
+    [unlocked],
+  );
+
+  const requestSignIn = useCallback(() => {
+    if (!unlocked) {
+      setSignup(null);
+      setSigningIn(true);
+    }
   }, [unlocked]);
 
-  const complete = useCallback((a: QualificationAnswers) => {
+  const complete = useCallback((data: RegistrationData) => {
+    const p: SessionProfile = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      role: data.whoAreYou,
+    };
     setUnlocked(true);
-    setAnswers(a);
-    setQualifying(false);
+    setProfile(p);
+    setSignup(null);
     try {
       sessionStorage.setItem(STORAGE_KEY, "1");
-      // TODO(data): qualification answers, backend later.
-      sessionStorage.setItem(ANSWERS_KEY, JSON.stringify(a));
+      // TODO(data): profile goes to a backend later.
+      sessionStorage.setItem(PROFILE_KEY, JSON.stringify(p));
     } catch {
       /* ignore */
     }
   }, []);
 
-  // DEMO ONLY — reset the session so the qualification gate shows again in a live walkthrough.
+  // DEMO: mocked sign-in — flips the same session flag the signup flow sets. No profile
+  // (only an email), so the hero greeting stays off for this path.
+  const completeSignIn = useCallback((email: string) => {
+    setUnlocked(true);
+    setSigningIn(false);
+    try {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+      sessionStorage.setItem(EMAIL_KEY, email);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // DEMO ONLY — reset the session so the signup gate shows again in a live walkthrough.
   const relock = useCallback(() => {
     setUnlocked(false);
-    setAnswers(null);
-    setQualifying(false);
+    setProfile(null);
+    setSignup(null);
     try {
       sessionStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(ANSWERS_KEY);
+      sessionStorage.removeItem(PROFILE_KEY);
+      sessionStorage.removeItem(EMAIL_KEY);
     } catch {
       /* ignore */
     }
   }, []);
 
   return (
-    <UnlockContext.Provider value={{ unlocked, requestUnlock, relock, answers }}>
+    <UnlockContext.Provider value={{ unlocked, requestUnlock, requestSignIn, relock, profile }}>
       {children}
 
-      {/* One shared qualification form for every gate entry point across the session. */}
-      <QualificationModal
-        open={qualifying}
-        onClose={() => setQualifying(false)}
+      {/* One shared signup form for every gate entry point across the session. */}
+      <SignupModal
+        open={signup !== null}
+        variant={signup?.variant ?? "buyer"}
+        initialWho={signup?.who}
+        onClose={() => setSignup(null)}
         onComplete={complete}
+      />
+
+      {/* One shared Sign in popup. "Sign up" inside it switches to the signup form. */}
+      <SignInModal
+        open={signingIn}
+        onClose={() => setSigningIn(false)}
+        onComplete={completeSignIn}
+        onSwitchToSignUp={() => {
+          setSigningIn(false);
+          setSignup({ variant: "buyer" });
+        }}
       />
 
       {/* DEMO ONLY re-lock control — shown only while unlocked so a fresh session stays untouched. */}
@@ -104,7 +186,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// DEMO ONLY — not part of the product. Lets us re-show the qualification gate during a demo.
+// DEMO ONLY — not part of the product. Lets us re-show the signup gate during a demo.
 function DemoResetButton({ onReset }: { onReset: () => void }) {
   return (
     <button

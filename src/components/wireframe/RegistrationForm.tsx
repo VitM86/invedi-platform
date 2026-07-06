@@ -3,13 +3,19 @@
 /**
  * RegistrationForm — the ONE shared sign-up / registration field set.
  *
- * Used by BOTH the gate qualification flow (QualificationModal's final step) and the
- * Bulk & Fractional "register interest" section (RegisterInterestForm wraps it). Keeping the
- * fields + validation in one place means the two surfaces can't drift.
+ * Used by BOTH the signup gate (SignupModal) and the Bulk & Fractional "register interest"
+ * section (RegisterInterestForm wraps it). Keeping the fields + validation in one place means
+ * the two surfaces can't drift.
  *
- * The only context difference is the "Who are you" pair:
- *   - buyer (gate / residences): "Buyer / Investor"  vs "Agent / Broker"
- *   - bulk  (bulk & fractional):  "Buyer group"       vs "Agent (representing buyer group)"
+ * Single screen per founder's spec — required fields first, optional fields under a subtle
+ * "Optional" divider. No steps, no progress bar.
+ *
+ * Variant differences (per founder's spec):
+ *   - buyer (gate / residences): "Buyer / Investor" vs "Agent / Broker"; optional
+ *     Occupation / Company name (max 200).
+ *   - bulk (bulk & fractional / group of buyers): "Buyer group" vs "Agent (representing
+ *     buyer group)"; REQUIRED "Short description of your group" (max 100); no occupation
+ *     field; phone label is just "Cell phone".
  *
  * Fully mocked — validates client-side and hands a clean payload to onSubmit; no network.
  * // TODO(data): registration payload, backend later.
@@ -24,8 +30,9 @@ export type RegistrationData = {
   lastName: string;
   email: string;
   whoAreYou: string; // one of the variant's two option labels
-  companyName: string; // Occupation / Company name (optional)
-  phone: string; // WhatsApp / Text cell phone (optional)
+  companyName: string; // Occupation / Company name (buyer variant, optional)
+  groupDescription: string; // Short description of your group (bulk variant, REQUIRED)
+  phone: string; // optional
   nationality: string; // optional
   agreeTerms: boolean; // required
   agreeMessaging: boolean; // optional
@@ -37,6 +44,7 @@ const EMPTY: RegistrationData = {
   email: "",
   whoAreYou: "",
   companyName: "",
+  groupDescription: "",
   phone: "",
   nationality: "",
   agreeTerms: false,
@@ -44,25 +52,27 @@ const EMPTY: RegistrationData = {
 };
 
 const COMPANY_LIMIT = 200;
+const GROUP_DESC_LIMIT = 100;
 
 /** Permissive email check — local-part@host.tld. The real backend does the authoritative one. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// TODO(copy): "Who are you" option labels are placeholder pending founder input.
-const WHO_OPTIONS: Record<RegistrationVariant, [string, string]> = {
+export const WHO_OPTIONS: Record<RegistrationVariant, [string, string]> = {
   buyer: ["Buyer / Investor", "Agent / Broker"],
   bulk: ["Buyer group", "Agent (representing buyer group)"],
 };
 
 type Errors = Partial<Record<keyof RegistrationData, string>>;
 
-function validate(v: RegistrationData): Errors {
+function validate(v: RegistrationData, variant: RegistrationVariant): Errors {
   const e: Errors = {};
   if (!v.firstName.trim()) e.firstName = "First name is required";
   if (!v.lastName.trim()) e.lastName = "Last name is required";
   if (!v.email.trim()) e.email = "Email is required";
   else if (!EMAIL_RE.test(v.email.trim())) e.email = "Enter a valid email address";
   if (!v.whoAreYou) e.whoAreYou = "Pick the option that fits you";
+  if (variant === "bulk" && !v.groupDescription.trim())
+    e.groupDescription = "Tell us briefly about your group";
   if (!v.agreeTerms) e.agreeTerms = "Please accept the Terms & Conditions and Privacy Policy";
   return e;
 }
@@ -71,21 +81,24 @@ export function RegistrationForm({
   variant = "buyer",
   submitLabel = "Submit",
   onSubmit,
-  onBack,
   footerNote,
   dense = false,
+  initialWho,
 }: {
   variant?: RegistrationVariant;
   submitLabel?: string;
   onSubmit: (data: RegistrationData) => void;
-  /** Optional Back control (used inside the gate wizard). */
-  onBack?: () => void;
   /** Small reassurance line shown next to the submit button. */
   footerNote?: React.ReactNode;
   /** Tighter vertical rhythm for the modal context. */
   dense?: boolean;
+  /** Preselect the "Who are you" toggle (e.g. when entered from a role card). Stays editable. */
+  initialWho?: string;
 }) {
-  const [values, setValues] = useState<RegistrationData>(EMPTY);
+  const [values, setValues] = useState<RegistrationData>(() => ({
+    ...EMPTY,
+    whoAreYou: initialWho && WHO_OPTIONS[variant].includes(initialWho) ? initialWho : "",
+  }));
   const [errors, setErrors] = useState<Errors>({});
 
   const rid = useId();
@@ -100,7 +113,7 @@ export function RegistrationForm({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const next = validate(values);
+    const next = validate(values, variant);
     setErrors(next);
     if (Object.keys(next).length > 0) return;
     // TODO(data): registration payload, backend later.
@@ -109,15 +122,20 @@ export function RegistrationForm({
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),
       email: values.email.trim(),
+      groupDescription: values.groupDescription.trim(),
     });
   };
 
   const [optA, optB] = WHO_OPTIONS[variant];
   const companyCount = values.companyName.length;
   const companyNear = companyCount >= COMPANY_LIMIT * 0.9;
+  const groupCount = values.groupDescription.length;
+  const groupNear = groupCount >= GROUP_DESC_LIMIT * 0.9;
 
   return (
     <form noValidate onSubmit={submit} className={dense ? "space-y-4" : "space-y-6"}>
+      {/* ------------------------- Required ------------------------- */}
+
       {/* First + Last */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="First name" id={fid("firstName")} errorId={eid("firstName")} error={errors.firstName} required>
@@ -166,30 +184,64 @@ export function RegistrationForm({
         </div>
       </FieldGroup>
 
-      {/* Occupation / Company name — optional, max 200, live counter */}
-      <Field
-        label="Occupation / Company name"
-        id={fid("companyName")}
-        hint="Optional"
-        counter={
-          <span className={companyNear ? "text-orange/80" : "text-text-muted"}>
-            {companyCount} / {COMPANY_LIMIT}
-          </span>
-        }
-      >
-        <input
-          id={fid("companyName")}
-          value={values.companyName}
-          onChange={(e) => set("companyName", e.target.value.slice(0, COMPANY_LIMIT))}
-          maxLength={COMPANY_LIMIT}
-          className={inputCls(false)}
-          autoComplete="organization"
-        />
-      </Field>
+      {/* Short description of your group — bulk only, REQUIRED, max 100, live counter */}
+      {variant === "bulk" && (
+        <Field
+          label="Short description of your group"
+          id={fid("groupDescription")}
+          errorId={eid("groupDescription")}
+          error={errors.groupDescription}
+          required
+          counter={
+            <span className={groupNear ? "text-orange/80" : "text-text-muted"}>
+              {groupCount} / {GROUP_DESC_LIMIT}
+            </span>
+          }
+        >
+          <input
+            id={fid("groupDescription")}
+            value={values.groupDescription}
+            onChange={(e) => set("groupDescription", e.target.value.slice(0, GROUP_DESC_LIMIT))}
+            maxLength={GROUP_DESC_LIMIT}
+            aria-invalid={!!errors.groupDescription}
+            aria-describedby={errors.groupDescription ? eid("groupDescription") : undefined}
+            className={inputCls(!!errors.groupDescription)}
+          />
+        </Field>
+      )}
 
-      {/* Phone + Nationality — optional */}
+      {/* ------------------------- Optional ------------------------- */}
+      <div className="flex items-center gap-3" aria-hidden>
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-text-muted">Optional</span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      {/* Occupation / Company name — buyer only, max 200, live counter */}
+      {variant === "buyer" && (
+        <Field
+          label="Occupation / Company name"
+          id={fid("companyName")}
+          counter={
+            <span className={companyNear ? "text-orange/80" : "text-text-muted"}>
+              {companyCount} / {COMPANY_LIMIT}
+            </span>
+          }
+        >
+          <input
+            id={fid("companyName")}
+            value={values.companyName}
+            onChange={(e) => set("companyName", e.target.value.slice(0, COMPANY_LIMIT))}
+            maxLength={COMPANY_LIMIT}
+            className={inputCls(false)}
+            autoComplete="organization"
+          />
+        </Field>
+      )}
+
+      {/* Phone + Nationality */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="WhatsApp / Text cell phone" id={fid("phone")} hint="Optional">
+        <Field label={variant === "bulk" ? "Cell phone" : "WhatsApp / cell phone"} id={fid("phone")}>
           <input
             id={fid("phone")}
             type="tel"
@@ -199,7 +251,7 @@ export function RegistrationForm({
             autoComplete="tel"
           />
         </Field>
-        <Field label="Nationality" id={fid("nationality")} hint="Optional">
+        <Field label="Nationality" id={fid("nationality")}>
           <input
             id={fid("nationality")}
             value={values.nationality}
@@ -228,26 +280,15 @@ export function RegistrationForm({
         </CheckboxRow>
       </div>
 
-      {/* Footer: note + back + submit */}
+      {/* Footer: note + submit */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {footerNote ? <div className="text-xs text-text-muted">{footerNote}</div> : <span />}
-        <div className="flex items-center gap-3">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              className="h-11 flex-none rounded-lg border border-border bg-background px-4 text-sm font-semibold text-text transition hover:bg-surface"
-            >
-              Back
-            </button>
-          )}
-          <button
-            type="submit"
-            className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover sm:flex-none"
-          >
-            {submitLabel}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover"
+        >
+          {submitLabel}
+        </button>
       </div>
     </form>
   );

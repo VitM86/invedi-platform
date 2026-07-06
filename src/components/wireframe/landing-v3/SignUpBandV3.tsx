@@ -41,6 +41,8 @@ type SignUpCard = {
   title: string;
   role: RoleAccent;
   icon: "buyer" | "broker" | "group";
+  /** Signup form variant + preselected "Who are you" option for this role card. */
+  unlock: { variant: "buyer" | "bulk"; who: string };
   /** Product-scope badges, rendered bottom-right. */
   tags: string[];
   /** Optional secondary in-card link. Broker / Agent routes into BOTH products, so its card's
@@ -53,12 +55,14 @@ const CARDS: SignUpCard[] = [
     title: "Buyer",
     role: { accent: "#47688C", tint: "#EBF1F6" }, // soft steel blue
     icon: "buyer",
+    unlock: { variant: "buyer", who: "Buyer / Investor" },
     tags: ["Invedi residences"],
   },
   {
     title: "Broker / Agent",
     role: { accent: "#96763A", tint: "#F5EDDC" }, // soft gold — leans on the logo tone
     icon: "broker",
+    unlock: { variant: "buyer", who: "Agent / Broker" },
     tags: ["Invedi residences", "Bulk & fractional"],
     secondary: { label: "Bulk & fractional", href: "/bulk-fractional" },
   },
@@ -66,6 +70,7 @@ const CARDS: SignUpCard[] = [
     title: "Group of buyers",
     role: { accent: "#47755F", tint: "#E9F1EC" }, // soft emerald
     icon: "group",
+    unlock: { variant: "bulk", who: "Buyer group" },
     tags: ["Bulk & fractional"],
   },
 ];
@@ -181,7 +186,7 @@ export function SignUpBandV3() {
                   <div className="flex flex-col items-start gap-2.5">
                     <button
                       type="button"
-                      onClick={requestUnlock}
+                      onClick={() => requestUnlock(c.unlock)}
                       className="group inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.18em] text-text"
                     >
                       Sign up
@@ -204,7 +209,7 @@ export function SignUpBandV3() {
               <button
                 key={c.title}
                 type="button"
-                onClick={requestUnlock}
+                onClick={() => requestUnlock(c.unlock)}
                 className={`group text-left ${CARD_SHELL}`}
               >
                 {Head}

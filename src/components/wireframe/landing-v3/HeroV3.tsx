@@ -9,8 +9,7 @@
  *   - HeroBackground (photo + warm gradient overlay) fills the card.
  *   - The glass navbar sits at the very top, sharing the card's rounded top corners by way
  *     of the parent's clip. Photo is visibly blurred THROUGH the navbar.
- *   - Centred content sits in the upper-third (just below the navbar zone).
- *   - Three serif captions pinned to the bottom edge — left / center / right, same baseline.
+ *   - Centred content is vertically centred in the card, with a single "Explore residences" CTA.
  *
  * Below the card, this component also renders a FIXED light SiteHeader at the viewport top
  * with opacity tied to scroll: glass navbar fades out and the light header fades in across
@@ -21,8 +20,7 @@
  *   1. Background image: 1.06 → 1 scale-in (~1.2s) — inside HeroBackground.
  *   2. Glass navbar: opacity 0 → 1 over 0.5s — inside HeroNavbarV3.
  *   3. Headline: three masked-reveal lines, translateY 100% → 0%, staggered ~150ms.
- *   4. Subhead + buttons: fade + 20px rise after the headline finishes.
- *   5. Bottom captions: subtle fade-in last.
+ *   4. Subhead + CTA: fade + 20px rise after the headline finishes.
  * prefers-reduced-motion collapses every animation to its final state instantly.
  */
 
@@ -38,6 +36,7 @@ import {
 import type { CSSProperties } from "react";
 import { SUBHEAD_OPTIONS } from "../landing/Hero";
 import { AppHeader } from "../AppHeader";
+import { useUnlock } from "../UnlockProvider";
 import { HeroBackground } from "./HeroBackground";
 import { HeroNavbarV3 } from "./HeroNavbarV3";
 
@@ -49,28 +48,37 @@ const HEADLINE_LINES = [
   "Portugal and Spain.",
 ];
 
-const CAPTIONS = [
-  "Verified developments",
-  "Market data & comparisons",
-  "A direct path to the deal",
-];
-
-// Hero slideshow — 3-5 project images crossfading every 10s (see HeroBackground). Balearic
-// first (lightest file → fastest first paint). // TODO(assets): swap for final hero imagery.
+// Hero slideshow — project images crossfading every 10s (see HeroBackground). Every slide shows
+// residential development architecture (empty-landscape / cityscape slides were removed), ordered
+// for variety: different buildings, alternating light/dark and dusk/day, no repeat in a row.
+// Balearic first (lightest file → fastest first paint). // TODO(assets): swap for final imagery.
 const HERO_SLIDES = [
-  { src: "/images/landing/hero-balearic.jpg", alt: "A premium new-build development on the Mediterranean coast at golden hour" },
-  { src: "/images/landing/hero-marbella.jpg", alt: "A contemporary new-build residence on the Costa del Sol" },
-  { src: "/images/landing/hero-comporta.jpg", alt: "A minimalist new-build home among the pines near Comporta" },
-  { src: "/images/landing/hero-lisbon.jpg", alt: "A new-build development overlooking Lisbon" },
+  { src: "/images/landing/hero-balearic.jpg", alt: "A contemporary hillside villa development at golden hour" },
+  { src: "/images/buildings/building-01.jpg", alt: "A modern mid-rise residential tower at dusk, framed by palms" },
+  { src: "/images/buildings/building-05.jpg", alt: "A warm-toned coastal residential development beside the sea" },
+  { src: "/images/buildings/building-08.jpeg", alt: "New-build residences around a landscaped garden courtyard at dusk" },
 ];
 
-const BROKER_HREF = "/explore";
-const BUYER_HREF = "/explore";
+const EXPLORE_HREF = "/explore";
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Time-of-day salutation for the signed-in greeting (local time, computed at render). */
+function salutation(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 export function HeroV3() {
   const heroRef = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
+
+  // Personalised greeting after (mock) signup — reference: Aera's "Good afternoon Sam Pluis".
+  // `profile` is null on the server AND the first client render (sessionStorage is read in an
+  // effect), so SSR/hydration always show the eyebrow; the greeting swaps in right after mount.
+  const { profile } = useUnlock();
+  const greetingName = profile?.firstName?.trim();
 
   // Scroll-driven crossfade: as the hero exits the viewport, glass nav fades out and the
   // light SiteHeader fades in. Implemented against window scrollY + the measured hero height
@@ -98,7 +106,7 @@ export function HeroV3() {
       <section
         ref={heroRef}
         className="relative w-full px-3 pb-3 pt-3 sm:px-5 sm:pb-5 sm:pt-3"
-        style={{ height: "94vh", minHeight: 640 }}
+        style={{ height: "100vh", minHeight: 640 }}
       >
         {/* ONE rounded card — photo + glass nav + content + captions all live inside it. */}
         <div className="relative isolate h-full overflow-hidden rounded-2xl sm:rounded-3xl">
@@ -111,20 +119,20 @@ export function HeroV3() {
             <HeroNavbarV3 scrollOpacity={glassOpacity} />
           </div>
 
-          {/* Centred content — positioned in the upper third (just below the navbar zone). */}
-          <div
-            className="absolute inset-x-0 z-20 flex flex-col items-center px-6 text-center lg:px-10"
-            style={{ top: "22%" }}
-          >
-            {/* Trust tagline — elegant eyebrow above the headline. // TODO(copy): placement
-                (hero eyebrow) is our call; founder line used verbatim. */}
+          {/* Centred content — vertically centred in the card. A small top padding keeps it
+              optically balanced below the floating glass navbar. */}
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 pt-10 text-center lg:px-10">
+            {/* Eyebrow slot — trust tagline for anonymous visitors, personalised time-of-day
+                greeting once a mock session exists. Same typographic treatment for both.
+                // TODO(copy): placement (hero eyebrow) is our call; founder line used verbatim. */}
             <motion.p
+              key={greetingName ? "greeting" : "eyebrow"}
               initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduced ? 0 : 0.6, ease: EASE, delay: reduced ? 0 : 0.1 }}
               className="mb-5 text-[11px] font-medium uppercase tracking-[0.32em] text-white/85 sm:text-[12px]"
             >
-              Trust, built in. Buyers first. Always.
+              {greetingName ? `${salutation()}, ${greetingName}` : "Trust, built in. Buyers first. Always."}
             </motion.p>
 
             <h1 className="text-white" style={SERIF}>
@@ -164,19 +172,13 @@ export function HeroV3() {
               initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduced ? 0 : 0.6, ease: EASE, delay: reduced ? 0 : 1.32 }}
-              className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+              className="mt-9 flex w-full max-w-[320px] justify-center sm:max-w-none"
             >
               <Link
-                href={BROKER_HREF}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-7 text-[14px] font-semibold text-white shadow-lg transition hover:bg-primary-hover"
+                href={EXPLORE_HREF}
+                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-primary px-8 text-[14px] font-semibold text-white shadow-lg transition hover:bg-primary-hover sm:w-auto"
               >
-                For brokers &amp; agents
-              </Link>
-              <Link
-                href={BUYER_HREF}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-white px-7 text-[14px] font-semibold text-primary-dark shadow-lg transition hover:bg-white/95"
-              >
-                For buyers &amp; investors
+                Explore residences
               </Link>
             </motion.div>
           </div>
@@ -191,26 +193,6 @@ export function HeroV3() {
             className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-px"
             style={{ backgroundColor: "rgba(245, 232, 205, 0.92)" }}
           />
-
-          {/* Bottom captions — three serif lines, same baseline, equal padding. 3-col grid
-              with left/center/right text alignment. Side captions hide on mobile. */}
-          <motion.div
-            initial={reduced ? { opacity: 1 } : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: reduced ? 0 : 0.7, ease: EASE, delay: reduced ? 0 : 1.55 }}
-            className="absolute inset-x-0 bottom-7 z-20 grid grid-cols-3 items-baseline px-8 sm:bottom-9 sm:px-12 lg:bottom-11 lg:px-16"
-            style={SERIF}
-          >
-            <span className="hidden text-left text-[13px] font-light tracking-wide text-white/85 sm:inline lg:text-[15px]">
-              {CAPTIONS[0]}
-            </span>
-            <span className="text-center text-[13px] font-light tracking-wide text-white/85 lg:text-[15px]">
-              {CAPTIONS[1]}
-            </span>
-            <span className="hidden text-right text-[13px] font-light tracking-wide text-white/85 sm:inline lg:text-[15px]">
-              {CAPTIONS[2]}
-            </span>
-          </motion.div>
         </div>
       </section>
 
